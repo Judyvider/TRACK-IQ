@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>TrackIQ — Continuous Intelligence Dashboard</title>
+
+<!-- Load Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Load Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- jsPDF core & AutoTable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+    // Tailwind Custom Configuration
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    primary: {
+                        50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 
+                        500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d',
+                    },
+                    slate: { 850: '#1e293b', 900: '#0f172a' }
+                },
+                fontFamily: {
+                    sans: ['Inter', 'system-ui', 'sans-serif'],
+                    mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+                }
+            }
+        }
+    }
+</script>
+
+<!-- Leaflet CSS and JS for Map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Custom Styling -->
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; overflow: hidden; }
+    
+    /* Layout */
+    .app-container { display: flex; height: 100vh; flex-direction: column; }
+    .content-wrapper { display: flex; flex: 1; overflow: hidden; }
+    
+    /* Sidebar */
+    .sidebar { width: 260px; background-color: #0f172a; color: white; display: flex; flex-direction: column; transition: all 0.3s ease; flex-shrink: 0; }
+    .nav-item { 
+        padding: 12px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; 
+        color: #94a3b8; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; border-left: 3px solid transparent;
+    }
+    .nav-item:hover { background-color: #1e293b; color: white; }
+    .nav-item.active { background-color: #1e293b; color: #4ade80; border-left-color: #4ade80; }
+    .nav-section { padding: 16px 20px 8px; font-size: 0.75rem; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Main Area */
+    .main-area { flex: 1; overflow-y: auto; padding: 24px; position: relative; scroll-behavior: smooth; background-color: #f8fafc; }
+
+    #mapid { height: 100%; min-height: 250px; z-index: 0; border-radius: 1.5rem; }
+    #mapid-full { height: 100%; width: 100%; z-index: 0; border-radius: 1.5rem; }
+    
+    .chart-container { height: 150px; width: 100%; position: relative; } 
+    
+    /* High Contrast Cards */
+    .dashboard-card {
+        background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .dashboard-card:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04); }
+    
+    .dashboard-card-dark {
+        background: #0f172a; border: 1px solid #1e293b; border-radius: 1.5rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Primary Buttons */
+    .btn-primary {
+        background: #22c55e; color: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.4);
+        transition: all 0.15s ease; border: none; outline: none; font-weight: bold;
+    }
+    .btn-primary:hover { background: #16a34a; transform: translateY(-1px); box-shadow: 0 6px 8px -1px rgba(34, 197, 94, 0.5); }
+    .btn-primary:active { transform: translateY(1px); box-shadow: 0 2px 4px -1px rgba(34, 197, 94, 0.4); }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+    .gauge-value { position: absolute; top: 65%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+    
+    .hidden-view { display: none !important; }
+
+    /* Landing Page Auth Overlay */
+    .landing-bg {
+        background-image: linear-gradient(rgba(15, 23, 42, 0.90), rgba(15, 23, 42, 0.95)), url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2000&auto=format&fit=crop');
+        background-size: cover; background-position: center;
+    }
+    .cursor-blink { animation: blink-cursor 0.75s step-end infinite; }
+    @keyframes blink-cursor { 0%, 100% { border-right-color: transparent; } 50% { border-right-color: #4ade80; } }
+    
+    .offline-overlay {
+        position: absolute; inset: 0; background: rgba(255,255,255,0.7); backdrop-filter: blur(2px);
+        display: flex; align-items: center; justify-content: center; z-index: 50; border-radius: 1.5rem;
+        opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .offline-overlay.active { opacity: 1; pointer-events: auto; }
+</style>
+</head>
+<body class="text-slate-800 app-container">
+
+<!-- LANDING / AUTHENTICATION PAGE -->
+<div id="landing-page" class="fixed inset-0 z-[9999] landing-bg overflow-y-auto transition-transform duration-1000 ease-in-out custom-scrollbar">
+    <div class="min-h-screen flex flex-col items-center justify-center text-center p-4 sm:p-6 py-12">
+        <div class="max-w-5xl w-full mx-auto my-auto">
+            <div class="flex items-center justify-center gap-3 mb-6">
+                <i data-lucide="radar" class="w-12 h-12 text-primary-400"></i>
+                <h1 class="text-4xl md:text-6xl font-black text-white tracking-tight">TrackIQ</h1>
+            </div>
+            <div class="h-1 w-24 bg-primary-500 mx-auto mb-10 rounded-full opacity-0 transition-opacity duration-1000" id="landing-divider"></div>
+            <p id="typewriter-subtitle" class="text-lg md:text-2xl font-mono text-primary-200 min-h-[6rem] leading-relaxed uppercase tracking-wider font-bold">
+                <!-- JS Populates -->
+            </p>
+            
+            <!-- AUTHENTICATION CARD -->
+            <div id="auth-card" class="max-w-md w-full mx-auto bg-slate-900/80 backdrop-blur-xl border border-slate-700 p-8 rounded-3xl shadow-2xl opacity-0 translate-y-8 transition-all duration-700 hidden mt-4">
+                <div class="flex justify-center gap-6 mb-6 border-b border-slate-700 pb-4">
+                    <button id="tab-login" onclick="toggleAuth('login')" class="text-white font-bold border-b-2 border-primary-500 pb-2 transition-colors">Login</button>
+                    <button id="tab-register" onclick="toggleAuth('register')" class="text-slate-400 font-medium pb-2 hover:text-slate-200 border-b-2 border-transparent transition-colors">Register</button>
+                </div>
+                
+                <form id="auth-form" onsubmit="event.preventDefault(); window.enterDashboard();" class="space-y-4 text-left">
+                    <div id="field-name" class="hidden">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Company / User Name</label>
+                        <input type="text" id="reg-name" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 outline-none focus:border-primary-500 transition-colors" placeholder="e.g. FreshFarms Ltd">
+                    </div>
+                    <div id="field-role" class="hidden">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Account Type</label>
+                        <select id="reg-role" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 outline-none focus:border-primary-500 transition-colors cursor-pointer">
+                            <option value="admin">System Admin</option>
+                            <option value="exporter">Exporter / Producer</option>
+                            <option value="transporter">Logistics / Transporter</option>
+                            <option value="buyer">Retailer / Buyer</option>
+                            <option value="farmer">Farmer / Outgrower</option>
+                        </select>
+                    </div>
+                    
+                    <div id="field-login-role">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Demo Persona (For Pitching)</label>
+                        <select id="login-role" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 outline-none focus:border-primary-500 transition-colors cursor-pointer text-primary-400 font-bold">
+                            <option value="admin">Logistics Admin (Full Access)</option>
+                            <option value="exporter">Exporter (Financials & Quality)</option>
+                            <option value="transporter">Transporter (Routing & Logs)</option>
+                            <option value="buyer">Buyer (ETA & Status)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Email</label>
+                        <input type="email" required value="admin@trackiq.io" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 outline-none focus:border-primary-500 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Password</label>
+                        <input type="password" required value="••••••••" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 outline-none focus:border-primary-500 transition-colors">
+                    </div>
+                    <button type="submit" id="auth-submit-btn" class="w-full btn-primary py-4 rounded-xl font-bold text-lg mt-6 flex items-center justify-center gap-2">
+                        <i data-lucide="lock" class="w-5 h-5" id="auth-btn-icon"></i>
+                        <span id="auth-submit-text">SECURE LOGIN</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="mt-12 text-slate-500 text-xs tracking-[0.2em] uppercase font-mono flex flex-wrap items-center justify-center gap-4 w-full">
+            <span>TrackIQ OS v4.0</span> <span class="w-1 h-1 bg-slate-500 rounded-full"></span> <span>Demo Environment</span>
+        </div>
+    </div>
+</div>
+
+<!-- GLOBAL HEADER -->
+<header class="bg-slate-900 border-b border-slate-800 text-white z-50 h-16 flex-none">
+    <div class="w-full px-6 h-full flex justify-between items-center relative">
+        <div class="flex items-center gap-3">
+            <i data-lucide="radar" class="w-6 h-6 text-primary-400"></i>
+            <h1 class="text-xl font-bold tracking-tight">TrackIQ <span class="font-normal opacity-70 text-sm ml-2">Logistics Intelligence</span></h1>
+        </div>
+
+        <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+            <div id="globalConnStatus" class="flex items-center gap-2 bg-slate-800 px-4 py-1.5 rounded-full text-xs font-bold text-slate-300 border border-slate-700">
+                <span id="connDot" class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
+                <span id="connText" class="tracking-wider">LIVE TELEMETRY</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div class="text-right hidden sm:block leading-tight">
+                <div id="headerRoleText" class="text-[10px] font-bold uppercase opacity-75 text-primary-200 tracking-wider">ADMINISTRATOR</div>
+                <div id="headerUserName" class="text-xs font-bold font-mono">OP-8821-K</div>
+            </div>
+            <div class="h-9 w-9 bg-slate-800 border border-slate-600 rounded-full flex items-center justify-center">
+                <i data-lucide="user" class="w-4 h-4 text-slate-300"></i>
+            </div>
+            <button onclick="window.logout()" class="ml-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+                Logout
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="content-wrapper">
+    <!-- SIDEBAR -->
+    <nav class="sidebar custom-scrollbar overflow-y-auto">
+        <div class="nav-section mt-4" id="nav-sec-monitoring">Monitoring Core</div>
+        <div class="nav-item active" id="nav-main" onclick="switchView('main')">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Live Telemetry
+        </div>
+        <div class="nav-item" id="nav-gps" onclick="switchView('gps')">
+            <i data-lucide="map" class="w-4 h-4"></i> Route Tracking
+        </div>
+        
+        <div class="nav-section" id="nav-sec-intel">Intelligence</div>
+        <div class="nav-item text-primary-300 font-bold" id="nav-shelflife" onclick="switchView('shelflife')">
+            <i data-lucide="hourglass" class="w-4 h-4"></i> Shelf Life Engine
+        </div>
+        <div class="nav-item" id="nav-logs" onclick="switchView('logs')">
+            <i data-lucide="list-ordered" class="w-4 h-4"></i> Data Ledger
+        </div>
+
+        <div class="nav-section" id="nav-sec-ops">Operations</div>
+        <div class="nav-item" id="nav-reports" onclick="switchView('reports')">
+            <i data-lucide="file-check-2" class="w-4 h-4"></i> Claims & e-POD
+        </div>
+        <div class="nav-item" id="nav-reviews" onclick="switchView('reviews')">
+            <i data-lucide="star" class="w-4 h-4 text-amber-400"></i> Partner Reviews
+        </div>
+
+        <!-- Pitch Controls (Admin Only) -->
+        <div class="mt-auto p-4" id="nav-pitch-controls">
+            <div class="bg-slate-800 rounded-2xl p-4 text-xs text-slate-400 border border-slate-700">
+                <div class="font-bold text-slate-300 mb-2 flex items-center gap-1"><i data-lucide="keyboard" class="w-3 h-3"></i> Demo Controls</div>
+                <div class="flex justify-between items-center mb-1"><span>Temp Spike</span> <b class="text-white bg-slate-700 px-1.5 rounded">T</b></div>
+                <div class="flex justify-between items-center mb-1"><span>Drop Signal</span> <b class="text-white bg-slate-700 px-1.5 rounded">O</b></div>
+                <div class="flex justify-between items-center mb-1"><span>Border Delay</span> <b class="text-white bg-orange-600 px-1.5 rounded">B</b></div>
+                <div class="flex justify-between items-center mb-1"><span>Impact Hit</span> <b class="text-white bg-slate-700 px-1.5 rounded">S</b></div>
+                <div class="flex justify-between items-center mt-2 border-t border-slate-700 pt-2"><span>Normalize</span> <b class="text-white bg-slate-700 px-1.5 rounded">N</b></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN AREA -->
+    <main class="main-area custom-scrollbar relative">
+        
+        <!-- Border Delay Alert Banner -->
+        <div id="border-alert" class="hidden bg-orange-500 text-white p-3 rounded-xl mb-6 shadow-lg text-center text-sm font-bold uppercase tracking-wider animate-pulse flex items-center justify-center gap-2">
+            <i data-lucide="alert-octagon" class="w-5 h-5"></i>
+            Border Delay Detected: Vehicle Immobilized. Recalculating Shelf-Life Impacts...
+        </div>
+        
+        <!-- VIEW 1: DASHBOARD -->
+        <div id="view-main" class="space-y-6 animate-fade-in pb-10">
+            <!-- Controls -->
+            <div class="dashboard-card p-6 flex flex-col md:flex-row gap-6 items-center justify-between">
+                <div class="flex flex-col sm:flex-row gap-6 w-full md:w-auto flex-1">
+                    <div class="relative group flex-1">
+                        <i data-lucide="package" class="absolute left-4 top-3.5 h-4 w-4 text-slate-400 z-10"></i>
+                        <select id="truckSelect" class="bg-slate-50 border border-slate-200 rounded-xl pl-12 block w-full text-sm p-3.5 font-bold text-slate-700 cursor-pointer outline-none">
+                            <option value="AGRI-001">TRK-001: Fresh Tomatoes</option>
+                            <option value="AGRI-002">TRK-002: Avocados (Hass)</option>
+                            <option value="AGRI-003">TRK-003: Chilled Beef</option>
+                        </select>
+                    </div>
+                    <div class="relative group flex-1">
+                        <i data-lucide="map-pin" class="absolute left-4 top-3.5 h-4 w-4 text-slate-400 z-10"></i>
+                        <select id="routeSelect" class="bg-slate-50 border border-slate-200 rounded-xl pl-12 block w-full text-sm p-3.5 font-bold text-slate-700 cursor-pointer outline-none">
+                            <option value="Kisumu-Nairobi">Kisumu → Nairobi</option>
+                            <option value="Mombasa-Eldoret">Mombasa → Eldoret</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Left 3/4 -->
+                <div class="lg:col-span-3 space-y-6 relative">
+                    
+                    <!-- Offline Overlay -->
+                    <div id="mainOfflineOverlay" class="offline-overlay">
+                        <div class="bg-white border border-slate-200 p-8 rounded-3xl shadow-xl text-center max-w-sm">
+                            <div class="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-500 animate-pulse">
+                                <i data-lucide="wifi-off" class="w-8 h-8"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-800 mb-2">Cellular Connection Lost</h3>
+                            <p class="text-sm text-slate-500 mb-4">Device buffering locally on truck hardware.</p>
+                            <div class="text-xs font-mono bg-slate-50 py-3 rounded-xl text-slate-500 border border-slate-100">
+                                Queued payload: <span id="queueCount">0</span> bytes
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gauges Row -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div class="dashboard-card p-6 relative flex flex-col items-center justify-center">
+                            <div class="flex items-center gap-2 mb-4 w-full justify-center">
+                                <i data-lucide="thermometer" class="w-4 h-4 text-slate-400"></i>
+                                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Temperature</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="tempChart"></canvas>
+                                <div class="gauge-value"><span id="tempVal" class="text-3xl font-black text-slate-800">--</span><span class="text-sm font-bold text-slate-400">°C</span></div>
+                            </div>
+                        </div>
+                        <div class="dashboard-card p-6 relative flex flex-col items-center justify-center">
+                            <div class="flex items-center gap-2 mb-4 w-full justify-center">
+                                <i data-lucide="droplets" class="w-4 h-4 text-slate-400"></i>
+                                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Humidity</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="humChart"></canvas>
+                                <div class="gauge-value"><span id="humVal" class="text-3xl font-black text-slate-800">--</span><span class="text-sm font-bold text-slate-400">%</span></div>
+                            </div>
+                        </div>
+                        <div class="dashboard-card p-6 relative flex flex-col items-center justify-center">
+                            <div class="flex items-center gap-2 mb-4 w-full justify-center">
+                                <i data-lucide="activity" class="w-4 h-4 text-slate-400"></i>
+                                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Shock</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="shockChart"></canvas>
+                                <div class="gauge-value"><span id="shockVal" class="text-3xl font-black text-slate-800">--</span><span class="text-sm font-bold text-slate-400">G</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mini Map -->
+                    <div class="dashboard-card p-4 flex flex-col h-[320px]">
+                        <div class="px-2 pb-3 flex justify-between items-center z-10">
+                            <h3 class="font-bold text-slate-600 flex items-center gap-2 text-xs uppercase tracking-wider"><i data-lucide="map" class="w-4 h-4 text-primary-500"></i> Route Progress</h3>
+                            <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-3 py-1 rounded-lg" id="currentLocationName">Acquiring Lock...</div>
+                        </div>
+                        <div class="relative flex-1 rounded-2xl overflow-hidden border border-slate-200">
+                            <div id="mapid"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right 1/4 (Financial & ESG) -->
+                <div class="space-y-6" id="financialRiskCard">
+                    <div class="dashboard-card-dark p-6 text-white relative overflow-hidden flex flex-col h-full min-h-[300px]">
+                        <div class="absolute -right-8 -top-8 w-40 h-40 bg-red-500/20 rounded-full blur-3xl"></div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6 flex justify-between">
+                            <span>Financial Risk</span><i data-lucide="trending-down" class="w-4 h-4 text-red-400"></i>
+                        </h3>
+                        <div class="flex-1 flex flex-col justify-center text-center">
+                            <div class="text-slate-400 text-xs mb-2">Estimated Value at Risk</div>
+                            <div class="text-4xl font-black text-red-400 font-mono tracking-tighter drop-shadow-md">$<span id="financialLoss">0.00</span></div>
+                        </div>
+                        
+                        <!-- ESG / Carbon Waste Addition -->
+                        <div class="mt-4 pt-4 border-t border-slate-700 text-center">
+                            <div class="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-1">Est. Carbon Waste (ESG)</div>
+                            <div class="text-lg font-bold text-amber-500 font-mono"><span id="esgCarbon">0.0</span> kg CO₂e</div>
+                            <div class="text-[9px] text-slate-500 mt-1">Calculated from spoiled agricultural volume.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: SHELF LIFE ENGINE (5 Components) -->
+        <div id="view-shelflife" class="space-y-8 hidden-view animate-fade-in h-full flex flex-col pb-10">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 tracking-tight">Continuous Deterioration Model</h2>
+                    <p class="text-sm text-slate-500 mt-2">Predictive estimation powered by product-specific biological parameters.</p>
+                </div>
+            </div>
+
+            <!-- Top Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="dashboard-card p-8 flex flex-col">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">01 — Product Profile</h3>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase mb-1">Product</div>
+                    <div class="text-2xl font-black text-slate-800 mb-8" id="slProductName">Fresh Tomatoes</div>
+                    <ul class="space-y-4 text-sm flex-1 bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                        <li class="flex justify-between items-center"><span class="text-slate-500">Harvest Date</span> <span class="font-mono font-bold text-slate-700 bg-white px-2 py-1 rounded shadow-sm border border-slate-100">Day 0</span></li>
+                        <li class="flex justify-between items-center"><span class="text-slate-500">Expected Baseline</span> <span class="font-mono font-bold text-slate-700" id="slBaseExpected">7.0 Days</span></li>
+                    </ul>
+                </div>
+
+                <div class="dashboard-card p-8 flex flex-col relative overflow-hidden">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">02 — Exposure History</h3>
+                    <div class="space-y-6 flex-1">
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center">
+                            <span class="text-xs font-bold text-slate-600 uppercase tracking-wide">Avg Temp</span>
+                            <span class="text-lg font-mono font-bold text-slate-800" id="histCurrentTemp">--</span>
+                        </div>
+                        <div class="mt-auto pt-4">
+                            <div class="flex justify-between items-center bg-primary-50 p-4 rounded-2xl border border-primary-100">
+                                <span class="text-xs font-bold text-primary-700 uppercase tracking-wide">Time in Transit</span>
+                                <span class="font-mono font-black text-primary-700 text-xl" id="histElapsedTime">0.0 hrs</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card-dark p-8 flex flex-col relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-primary-500/10 rounded-full blur-3xl"></div>
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 relative z-10">03 — Deterioration Engine</h3>
+                    <div class="font-mono text-sm space-y-5 flex-1 relative z-10">
+                        <div class="flex justify-between items-center text-slate-300"><span>Baseline shelf life</span><span id="mathBase" class="font-bold">7.00 days</span></div>
+                        <div class="space-y-4 my-6 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                            <div class="flex justify-between items-center text-slate-400"><span>Elapsed time</span><span id="mathElapsed">- 0.00 days</span></div>
+                            <div class="flex justify-between items-center text-amber-400"><span>Thermal exposure</span><span id="mathThermal">- 0.00 days</span></div>
+                        </div>
+                        <div class="pt-6 mt-6 flex justify-between items-center border-t border-slate-700/50">
+                            <span class="font-bold text-white uppercase tracking-wider text-[10px]">Estimated Remaining</span>
+                            <span class="font-black text-xl text-primary-400 bg-primary-900/30 px-3 py-1.5 rounded-xl border border-primary-500/30" id="mathRemaining">7.00 days</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-auto">
+                <div class="dashboard-card p-10 flex flex-col justify-center items-center text-center relative overflow-hidden bg-gradient-to-b from-white to-slate-50">
+                    <h3 class="absolute top-8 left-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">04 — Prediction</h3>
+                    <div class="mt-8">
+                        <div class="text-[6rem] font-black text-slate-800 tracking-tighter leading-none drop-shadow-sm" id="bigRemainingSL">7.0</div>
+                        <div class="text-sm font-black text-slate-400 uppercase tracking-widest mt-4">Days Remaining</div>
+                    </div>
+                    <div class="mt-8 px-5 py-2.5 bg-white rounded-xl text-xs font-bold text-slate-500 font-mono border border-slate-200 shadow-sm">
+                        CONFIDENCE: <span class="text-slate-800">MODERATE (82%)</span>
+                    </div>
+                </div>
+
+                <div class="dashboard-card flex flex-col relative overflow-hidden" id="decisionCard">
+                    <div class="p-8">
+                        <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8">05 — Decision Layer</h3>
+                        <div class="flex flex-col md:flex-row items-center gap-8">
+                            <div class="flex-1 w-full bg-slate-50 border border-slate-100 rounded-3xl p-6 flex items-center justify-between shadow-inner">
+                                <div class="text-center">
+                                    <div class="text-[10px] text-slate-400 uppercase font-bold mb-2 tracking-wider">Remaining</div>
+                                    <div class="text-4xl font-black text-slate-800 font-mono bg-white px-3 py-2 rounded-xl shadow-sm border border-slate-200" id="decRemaining">7.0<span class="text-base text-slate-500 ml-1">d</span></div>
+                                </div>
+                                <div class="px-4 text-3xl font-black font-mono text-slate-300 drop-shadow-sm" id="decOperator">></div>
+                                <div class="text-center">
+                                    <div class="text-[10px] text-slate-400 uppercase font-bold mb-2 tracking-wider">Route ETA</div>
+                                    <div class="text-4xl font-black text-slate-800 font-mono bg-white px-3 py-2 rounded-xl shadow-sm border border-slate-200" id="decETA">5.0<span class="text-base text-slate-500 ml-1">d</span></div>
+                                </div>
+                            </div>
+                            <div class="flex-1 w-full">
+                                <div class="flex items-center gap-4 mb-3">
+                                    <div id="decIconContainer" class="w-12 h-12 rounded-2xl flex items-center justify-center bg-green-100 text-green-600 border border-green-200 shadow-sm">
+                                        <i data-lucide="check-circle-2" class="w-6 h-6" id="decIcon"></i>
+                                    </div>
+                                    <h4 class="text-2xl font-black tracking-tight text-green-700 drop-shadow-sm" id="decTitle">LOW RISK</h4>
+                                </div>
+                                <p class="text-sm font-medium leading-relaxed text-slate-600 bg-white p-4 rounded-xl border border-slate-100" id="decMessage">Shipment is expected to arrive safely within its estimated usable life. Continue standard monitoring.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 3: LOGS -->
+        <div id="view-logs" class="space-y-6 hidden-view animate-fade-in h-full flex flex-col">
+            <h2 class="text-3xl font-black text-slate-800 tracking-tight">Telemetry Data Ledger</h2>
+            <div class="dashboard-card flex-1 overflow-hidden flex flex-col p-2 bg-white">
+                <div class="flex-1 overflow-y-auto custom-scrollbar">
+                    <table class="w-full text-left text-sm" id="fullLogTable">
+                        <thead class="bg-slate-50 sticky top-0 z-10 border-b border-slate-200">
+                            <tr>
+                                <th class="px-8 py-4 font-bold text-slate-500 uppercase text-xs tracking-wider">Time</th>
+                                <th class="px-8 py-4 font-bold text-slate-500 uppercase text-xs tracking-wider">Event</th>
+                                <th class="px-8 py-4 font-bold text-slate-500 uppercase text-xs tracking-wider">Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fullLogBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: REPORTS & e-POD -->
+        <div id="view-reports" class="space-y-6 hidden-view animate-fade-in h-full flex flex-col">
+             <h2 class="text-3xl font-black text-slate-800 tracking-tight mb-6">Claims & e-POD</h2>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <!-- PDF Box -->
+                 <div class="dashboard-card p-10 flex flex-col bg-white">
+                     <h3 class="font-bold text-xl mb-4 text-slate-700">Generate PDF Dossier</h3>
+                     <p class="text-sm text-slate-500 mb-8 leading-relaxed">Exports the full telemetry history, financial risk assessment, and Shelf Life estimates for insurance compliance.</p>
+                     <button onclick="generatePDF()" class="btn-primary py-4 font-bold text-lg flex items-center justify-center gap-3">
+                         <i data-lucide="file-text" class="w-5 h-5"></i> Download PDF
+                     </button>
+                 </div>
+                 
+                 <!-- e-POD Box -->
+                 <div class="dashboard-card-dark p-10 flex flex-col text-white">
+                     <h3 class="font-bold text-xl mb-4 text-white">Digital Handover (e-POD)</h3>
+                     <p class="text-sm text-slate-400 mb-8 leading-relaxed">Generate an immutable custody transfer receipt to lock in the cargo's condition at the time of delivery.</p>
+                     <button onclick="generateEPOD()" class="bg-slate-700 hover:bg-slate-600 text-white border border-slate-500 py-4 font-bold text-lg rounded-xl flex items-center justify-center gap-3 transition-colors">
+                         <i data-lucide="qr-code" class="w-5 h-5"></i> Generate e-POD Token
+                     </button>
+                     <div id="epodReceipt" class="hidden mt-6 bg-slate-800 border border-slate-600 p-4 rounded-xl text-center">
+                         <div class="text-[10px] text-slate-400 uppercase tracking-wider mb-2" id="epodTime"></div>
+                         <div id="epodStatus" class="font-black text-xl mb-2 tracking-wide"></div>
+                         <div class="text-xs font-mono text-slate-300">Terminal Temp: <span id="epodTemp"></span></div>
+                         <div class="text-xs font-mono text-slate-300">Est. Life Remaining: <span id="epodRem"></span></div>
+                     </div>
+                 </div>
+             </div>
+        </div>
+
+        <!-- VIEW 5: REVIEWS -->
+        <div id="view-reviews" class="space-y-6 hidden-view animate-fade-in h-full flex flex-col pb-10">
+             <div class="flex justify-between items-end mb-2">
+                 <h2 class="text-3xl font-black text-slate-800 tracking-tight">Partner Reviews</h2>
+                 <div class="bg-amber-100 text-amber-700 px-4 py-2 rounded-xl font-bold flex items-center gap-2"><i data-lucide="star" class="w-5 h-5 fill-amber-400"></i> 4.8 Fleet Average</div>
+             </div>
+             
+             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
+                 <div class="dashboard-card p-6 flex flex-col gap-4 h-fit">
+                     <h3 class="font-bold text-slate-700 uppercase tracking-wide text-sm border-b border-slate-100 pb-3">Submit Review</h3>
+                     <div>
+                         <label class="block text-xs font-bold text-slate-500 mb-1">Rating</label>
+                         <select id="reviewRating" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none font-bold text-slate-700 cursor-pointer">
+                             <option value="5">⭐⭐⭐⭐⭐ - Perfect</option>
+                             <option value="3">⭐⭐⭐ - Acceptable</option>
+                             <option value="1">⭐ - Total Loss</option>
+                         </select>
+                     </div>
+                     <div>
+                         <label class="block text-xs font-bold text-slate-500 mb-1">Feedback</label>
+                         <textarea id="reviewComment" rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none text-sm" placeholder="Cargo arrived safely..."></textarea>
+                     </div>
+                     <button onclick="submitReview()" class="btn-primary py-3 rounded-xl font-bold text-sm w-full mt-2">Publish</button>
+                 </div>
+                 
+                 <div class="lg:col-span-2 dashboard-card p-6 flex flex-col">
+                     <h3 class="font-bold text-slate-700 uppercase tracking-wide text-sm border-b border-slate-100 pb-3 mb-4">Recent Feedback</h3>
+                     <div id="reviewFeed" class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-2">
+                         <div class="bg-slate-50 border border-slate-100 p-4 rounded-2xl">
+                             <div class="flex justify-between items-start mb-2">
+                                 <div>
+                                     <div class="text-sm font-bold text-slate-800">FreshFarms Export Ltd <span class="text-[10px] text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full ml-1">EXPORTER</span></div>
+                                     <div class="text-[10px] text-slate-400 font-mono">Route: Mombasa → Eldoret</div>
+                                 </div>
+                                 <div class="text-amber-400 text-sm">⭐⭐⭐⭐⭐</div>
+                             </div>
+                             <p class="text-sm text-slate-600 leading-relaxed">Perfect 4°C throughout the Rift Valley.</p>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+        </div>
+        
+        <!-- VIEW 6: GPS (Full screen) -->
+        <div id="view-gps" class="space-y-6 hidden-view animate-fade-in h-full flex flex-col">
+             <h2 class="text-3xl font-black text-slate-800 tracking-tight mb-2">Live Route Tracking</h2>
+             <div class="dashboard-card flex-1 p-2 overflow-hidden relative border-4 border-white shadow-xl">
+                 <div id="mapid-full" class="w-full h-full z-0 rounded-xl"></div>
+             </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- TRACKIQ AI COPILOT WIDGET -->
+<button onclick="toggleAI()" class="fixed bottom-6 right-6 w-14 h-14 bg-slate-900 rounded-full flex items-center justify-center text-white shadow-2xl hover:bg-slate-800 hover:scale-105 transition-all z-50 border border-slate-700">
+    <i data-lucide="bot" class="w-7 h-7"></i>
+</button>
+
+<div id="ai-window" class="hidden fixed bottom-24 right-6 w-[340px] h-[450px] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden z-50 animate-fade-in">
+    <div class="bg-slate-900 p-4 text-white flex justify-between items-center border-b border-slate-700">
+        <div class="flex items-center gap-2">
+            <div class="w-2 h-2 bg-primary-400 rounded-full animate-pulse"></div>
+            <span class="font-bold text-sm">TrackIQ Copilot</span>
+        </div>
+        <button onclick="toggleAI()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div id="ai-chat-body" class="flex-1 p-4 overflow-y-auto custom-scrollbar bg-slate-50 flex flex-col">
+        <div class="mb-3 text-left">
+            <div class="inline-block p-3 rounded-2xl text-xs max-w-[85%] bg-white border border-slate-200 text-slate-700 rounded-tl-none shadow-sm">
+                Hello. I am the TrackIQ intelligence agent. I am monitoring your shipments. How can I assist you today?
+            </div>
+        </div>
+    </div>
+    <div class="p-3 bg-white border-t border-slate-200">
+        <div class="relative flex items-center">
+            <input type="text" id="ai-input" onkeypress="submitAI(event)" placeholder="Ask about TRK-001..." class="w-full bg-slate-100 text-xs rounded-full py-3 pl-4 pr-10 outline-none focus:ring-2 focus:ring-primary-500/50">
+            <button onclick="submitAI({key: 'Enter'})" class="absolute right-2 text-primary-600 hover:text-primary-700 p-1"><i data-lucide="send" class="w-4 h-4"></i></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- ICON GUARD ---
+    window.addEventListener('DOMContentLoaded', () => { if(window.lucide) lucide.createIcons(); });
+
+    // --- CONFIG & STATE ---
+    let PRODUCT_SPECS = {
+        'AGRI-001': { product: 'Fresh Tomatoes', tempRec: '2-8', tempCritHigh: 10, baseSL: 7.0, val: 25000 },
+        'AGRI-002': { product: 'Avocados (Hass)', tempRec: '5-12', tempCritHigh: 15, baseSL: 14.0, val: 45000 },
+        'AGRI-003': { product: 'Chilled Beef', tempRec: '-1 to 2', tempCritHigh: 4, baseSL: 10.0, val: 65000 }
+    };
+
+    const ROUTE_PATHS = {
+        'Kisumu-Nairobi': { waypoints: [{ lat: -0.0917, lng: 34.7679, name: 'Kisumu' }, { lat: -0.2833, lng: 36.0667, name: 'Nakuru' }, { lat: -1.2921, lng: 36.8219, name: 'Nairobi' }] },
+        'Mombasa-Eldoret': { waypoints: [{ lat: -4.0547, lng: 39.6636, name: 'Mombasa' }, { lat: -1.2921, lng: 36.8219, name: 'Nairobi' }, { lat: 0.5143, lng: 35.2698, name: 'Eldoret' }] }
+    };
+
+    let currentTruckData = PRODUCT_SPECS['AGRI-001'];
+    let currentRoute = ROUTE_PATHS['Kisumu-Nairobi'];
+    let cargoValue = currentTruckData.val;
+    
+    let alerts = [];
+    let routeIndex = 0;
+    let simInterval;
+    
+    let slElapsedDays = 0;
+    let slThermalPenalty = 0;
+    let slCurrentETA = 5.0; 
+    let cumulativeLoss = 0;
+    let esgCarbonWaste = 0; // Kg of CO2
+    
+    let isOffline = false;
+    let forceTempSpike = false;
+    let forceShock = false;
+    let forceBorderDelay = false;
+    
+    let bufferQueue = [];
+    let bufferBytes = 0;
+
+    let tempChart, humChart, shockChart, map, mapFull, truckMarker, truckMarkerFull;
+
+    const els = {};
+    window.addEventListener('DOMContentLoaded', () => {
+        ['truckSelect','routeSelect','tempVal','humVal','shockVal','tempRec','humRec','shockCrit','currentLocationName','fullLogBody',
+         'financialLoss', 'esgCarbon', 'queueCount', 'mainOfflineOverlay',
+         'connDot', 'connText', 'globalConnStatus',
+         'slProductName', 'slBaseExpected', 'histCurrentTemp', 'histElapsedTime',
+         'mathBase', 'mathElapsed', 'mathThermal', 'mathRemaining', 'bigRemainingSL',
+         'decisionCard', 'decRemaining', 'decETA', 'decOperator', 'decIconContainer', 'decIcon', 'decTitle', 'decMessage',
+         'border-alert'
+        ].forEach(id => els[id] = document.getElementById(id));
+    });
+
+    // --- AUTHENTICATION & INITIALIZATION ---
+    function init() {
+        setTimeout(() => {
+            document.getElementById("landing-divider").classList.remove("opacity-0");
+            setTimeout(() => {
+                const title = "DATA ACQUISITION... OK\nINITIALIZING ALGORITHMS... OK\nREADY.";
+                let i = 0; const el = document.getElementById("typewriter-subtitle");
+                el.classList.add("cursor-blink"); el.style.borderRight = "4px solid #4ade80";
+                function type() {
+                    if (i < title.length) { el.innerHTML += title.charAt(i) === '\n' ? '<br>' : title.charAt(i); i++; setTimeout(type, 30); }
+                    else { 
+                        el.style.borderRight = "none"; el.classList.remove("cursor-blink"); 
+                        const authCard = document.getElementById("auth-card");
+                        authCard.classList.remove("hidden"); setTimeout(() => authCard.classList.remove("opacity-0", "translate-y-8"), 50);
+                    }
+                }
+                type();
+            }, 500);
+        }, 800);
+        
+        els.truckSelect.addEventListener('change', resetData);
+        els.routeSelect.addEventListener('change', resetData);
+        setupPitchControls();
+    }
+
+    window.toggleAuth = function(mode) {
+        const tLog = document.getElementById('tab-login'), tReg = document.getElementById('tab-register');
+        if(mode === 'login') {
+            tLog.className = "text-white font-bold border-b-2 border-primary-500 pb-2 transition-colors";
+            tReg.className = "text-slate-400 font-medium pb-2 hover:text-slate-200 border-b-2 border-transparent transition-colors";
+            document.getElementById('field-name').classList.add('hidden'); document.getElementById('field-role').classList.add('hidden');
+            document.getElementById('field-login-role').classList.remove('hidden');
+            document.getElementById('auth-submit-text').innerText = "SECURE LOGIN"; document.getElementById('auth-btn-icon').setAttribute('data-lucide', 'lock');
+        } else {
+            tReg.className = "text-white font-bold border-b-2 border-primary-500 pb-2 transition-colors";
+            tLog.className = "text-slate-400 font-medium pb-2 hover:text-slate-200 border-b-2 border-transparent transition-colors";
+            document.getElementById('field-name').classList.remove('hidden'); document.getElementById('field-role').classList.remove('hidden');
+            document.getElementById('field-login-role').classList.add('hidden');
+            document.getElementById('auth-submit-text').innerText = "CREATE ACCOUNT"; document.getElementById('auth-btn-icon').setAttribute('data-lucide', 'user-plus');
+        }
+        if(window.lucide) window.lucide.createIcons();
+    }
+
+    window.enterDashboard = function() { 
+        const isLogin = document.getElementById('field-name').classList.contains('hidden');
+        let currentRole = isLogin ? document.getElementById('login-role').value : document.getElementById('reg-role').value;
+        let userName = isLogin ? "OP-8821-K" : (document.getElementById('reg-name').value || "New User");
+        
+        applyRolePermissions(currentRole, userName);
+        document.getElementById("landing-page").style.transform = "translateY(-100%)";
+        resetData(); // Start simulation
+    }
+
+    window.logout = function() { document.getElementById("landing-page").style.transform = "translateY(0%)"; }
+
+    function applyRolePermissions(role, userName) {
+        document.getElementById('headerRoleText').innerText = role; document.getElementById('headerUserName').innerText = userName;
+
+        const allNavs = ['nav-sec-monitoring', 'nav-main', 'nav-gps', 'nav-sec-intel', 'nav-shelflife', 'nav-logs', 'nav-sec-ops', 'nav-reports', 'nav-reviews', 'nav-pitch-controls', 'financialRiskCard'];
+        allNavs.forEach(id => { if(document.getElementById(id)) document.getElementById(id).style.display = 'block'; });
+
+        let startView = 'main';
+        if (role === 'exporter' || role === 'farmer') { hideElements(['nav-pitch-controls']); } 
+        else if (role === 'transporter') { hideElements(['nav-shelflife', 'nav-sec-ops', 'nav-reports', 'financialRiskCard', 'nav-pitch-controls']); } 
+        else if (role === 'buyer') { hideElements(['nav-main', 'nav-logs', 'nav-pitch-controls', 'financialRiskCard']); startView = 'gps'; }
+        switchView(startView);
+    }
+
+    function hideElements(ids) { ids.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; }); }
+
+    window.switchView = (view) => {
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        if (event && event.currentTarget && event.currentTarget.classList.contains('nav-item')) event.currentTarget.classList.add('active');
+        
+        ['view-main', 'view-logs', 'view-reports', 'view-gps', 'view-shelflife', 'view-reviews'].forEach(id => {
+            const el = document.getElementById(id); if(el) el.classList.add('hidden-view');
+        });
+        const targetView = document.getElementById('view-' + view); if(targetView) targetView.classList.remove('hidden-view');
+        
+        if (view === 'main' || view === 'gps') setTimeout(() => { if(map) map.invalidateSize(); if(mapFull) mapFull.invalidateSize(); }, 150);
+    };
+
+    function resetData() {
+        if (!window.L || !window.Chart) return setTimeout(resetData, 100);
+        currentTruckData = PRODUCT_SPECS[els.truckSelect.value];
+        currentRoute = ROUTE_PATHS[els.routeSelect.value]; cargoValue = currentTruckData.val;
+        
+        alerts = []; bufferQueue = []; bufferBytes = 0;
+        routeIndex = 0; slElapsedDays = 0; slThermalPenalty = 0; slCurrentETA = 5.0; cumulativeLoss = 0; esgCarbonWaste = 0;
+        els.fullLogBody.innerHTML = '';
+        els.financialLoss.innerText = "0.00"; els.esgCarbon.innerText = "0.0";
+        els.slProductName.innerText = currentTruckData.product;
+        els.slBaseExpected.innerText = currentTruckData.baseSL.toFixed(1) + " Days";
+        els.mathBase.innerText = currentTruckData.baseSL.toFixed(2) + " days";
+        
+        initMap(); initCharts();
+        if(simInterval) clearInterval(simInterval);
+        simInterval = setInterval(tick, 2500);
+    }
+
+    function createGauge(ctxId, color) {
+        return new Chart(document.getElementById(ctxId), {
+            type: 'doughnut',
+            data: { labels: ["Val", "Rem"], datasets: [{ data: [0, 100], backgroundColor: [color, "#f1f5f9"], borderWidth: 0, borderRadius: 20 }] },
+            options: { rotation: -90, circumference: 180, cutout: "75%", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, animation: { animateRotate: true } }
+        });
+    }
+
+    function initCharts() {
+        if(tempChart) tempChart.destroy(); if(humChart) humChart.destroy(); if(shockChart) shockChart.destroy();
+        tempChart = createGauge('tempChart', '#22c55e'); humChart = createGauge('humChart', '#3b82f6'); shockChart = createGauge('shockChart', '#a855f7');
+    }
+
+    function initMap() {
+        const start = currentRoute.waypoints[0];
+        if(!map) { map = L.map('mapid', { zoomControl: false }).setView([start.lat, start.lng], 6); L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map); }
+        else { map.setView([start.lat, start.lng], 6); map.eachLayer(l => { if(l instanceof L.Marker || l instanceof L.Polyline) map.removeLayer(l); }); }
+        L.polyline(currentRoute.waypoints.map(p=>[p.lat, p.lng]), {color: '#16a34a', weight: 4, opacity: 0.6}).addTo(map);
+        truckMarker = L.marker([start.lat, start.lng], { icon: L.divIcon({ className: 'custom-div-icon', html: '<div class="text-3xl drop-shadow-md">🚚</div>', iconSize: [40, 40] }) }).addTo(map);
+
+        if(!mapFull) { mapFull = L.map('mapid-full').setView([start.lat, start.lng], 7); L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(mapFull); }
+        else { mapFull.setView([start.lat, start.lng], 7); mapFull.eachLayer(l => { if(l instanceof L.Marker || l instanceof L.Polyline) mapFull.removeLayer(l); }); }
+        L.polyline(currentRoute.waypoints.map(p=>[p.lat, p.lng]), {color: '#16a34a', weight: 4, opacity: 0.6}).addTo(mapFull);
+        truckMarkerFull = L.marker([start.lat, start.lng], { icon: L.divIcon({ className: 'custom-div-icon', html: '<div class="text-5xl drop-shadow-xl">🚚</div>', iconSize: [50, 50] }) }).addTo(mapFull);
+    }
+
+    // --- PITCH CONTROLS (God Mode) ---
+    function setupPitchControls() {
+        document.addEventListener('keydown', (e) => {
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return; // SAFEGUARD
+            const key = e.key.toLowerCase();
+            if (key === 't') { forceTempSpike = true; forceShock = false; forceBorderDelay = false; }
+            if (key === 's') { forceShock = true; forceTempSpike = false; forceBorderDelay = false; }
+            if (key === 'n') { forceTempSpike = false; forceShock = false; forceBorderDelay = false; if(isOffline) toggleOffline(); updateBorderUI(); }
+            if (key === 'o') { toggleOffline(); }
+            if (key === 'b') { forceBorderDelay = !forceBorderDelay; updateBorderUI(); }
+        });
+    }
+
+    function updateBorderUI() {
+        if(forceBorderDelay) els['border-alert'].classList.remove('hidden');
+        else els['border-alert'].classList.add('hidden');
+    }
+
+    function toggleOffline() {
+        isOffline = !isOffline;
+        if(isOffline) {
+            els.mainOfflineOverlay.classList.add('active');
+            els.connDot.className = "w-2 h-2 bg-amber-500 rounded-full"; els.connText.innerText = "BUFFERING (OFFLINE)";
+        } else {
+            els.mainOfflineOverlay.classList.remove('active');
+            els.connDot.className = "w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]"; els.connText.innerText = "LIVE TELEMETRY";
+            if(bufferQueue.length > 0) { let fw = setInterval(() => { if(bufferQueue.length === 0) { clearInterval(fw); return; } processPayload(bufferQueue.shift()); }, 100); }
+            bufferBytes = 0; els.queueCount.innerText = 0;
+        }
+    }
+
+    // --- AI COPILOT LOGIC ---
+    window.toggleAI = function() {
+        const win = document.getElementById('ai-window');
+        win.classList.toggle('hidden');
+        if (!win.classList.contains('hidden')) document.getElementById('ai-input').focus();
+    }
+    
+    window.submitAI = function(e) {
+        if (e && e.key !== 'Enter') return;
+        const input = document.getElementById('ai-input');
+        const text = input.value.trim();
+        if(!text) return;
+
+        addChatMessage('user', text);
+        input.value = '';
+        
+        const chatBody = document.getElementById('ai-chat-body');
+        const typingId = 'typing-' + Date.now();
+        chatBody.insertAdjacentHTML('beforeend', `<div id="${typingId}" class="text-xs text-slate-400 mb-2 font-mono">TrackIQ processing...</div>`);
+        chatBody.scrollTop = chatBody.scrollHeight;
+
+        setTimeout(() => {
+            document.getElementById(typingId).remove();
+            let response = "";
+            const t = text.toLowerCase();
+            
+            if (t.includes('status') || t.includes('risk')) {
+                response = `Current Value at Risk: $${cumulativeLoss.toLocaleString()}. Remaining shelf life for ${currentTruckData.product} is ${els.bigRemainingSL.innerText} days.`;
+            } else if (t.includes('delay') || t.includes('border') || t.includes('malaba')) {
+                response = `I actively monitor known border geofences. If a delay occurs, I pause route progression and calculate the time-based thermal penalty against baseline shelf life.`;
+            } else if (t.includes('esg') || t.includes('carbon')) {
+                response = `This shipment has accrued ${esgCarbonWaste.toFixed(2)} kg of CO₂e waste due to product degradation.`;
+            } else if (t.includes('report') || t.includes('claim')) {
+                response = `I can help you generate an immutable e-POD or a PDF insurance claim. Head over to the "Claims & e-POD" tab on the left.`;
+            } else {
+                response = `I'm analyzing the telemetry for ${currentTruckData.product}. Temperature is currently ${els.tempVal.innerText}°C. Let me know if you want a risk assessment.`;
+            }
+            
+            addChatMessage('ai', response);
+        }, 1200);
+    }
+    
+    function addChatMessage(sender, text) {
+        const chatBody = document.getElementById('ai-chat-body');
+        const isUser = sender === 'user';
+        const html = `<div class="mb-3 ${isUser ? 'text-right' : 'text-left'}">
+                <div class="inline-block p-3 rounded-2xl text-xs max-w-[85%] ${isUser ? 'bg-primary-600 text-white rounded-br-none shadow-md' : 'bg-white border border-slate-200 text-slate-700 rounded-tl-none shadow-sm'}">
+                    ${text}
+                </div></div>`;
+        chatBody.insertAdjacentHTML('beforeend', html);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    // --- ENGINE SIMULATION ---
+    function tick() {
+        const d = currentTruckData;
+        let t = 5 + (Math.random()*4); let h = 85 + (Math.random()*5); let s = 1.0 + (Math.random()*0.5);
+        if (forceTempSpike) { t = 22 + (Math.random()*5); }
+        if (forceShock) { s = 4.5 + Math.random(); forceShock = false; }
+
+        const cur = truckMarker.getLatLng();
+        let lat = cur.lat, lng = cur.lng;
+        
+        if (!forceBorderDelay) {
+            const target = currentRoute.waypoints[routeIndex];
+            if (cur.distanceTo([target.lat, target.lng]) < 15000) routeIndex = (routeIndex + 1) % currentRoute.waypoints.length;
+            const next = currentRoute.waypoints[routeIndex];
+            const dLat = next.lat - cur.lat, dLng = next.lng - cur.lng;
+            const len = Math.sqrt(dLat*dLat + dLng*dLng);
+            if (len > 0) { const step = Math.min(0.08, len); lat = cur.lat + (dLat / len) * step; lng = cur.lng + (dLng / len) * step; }
+        }
+        
+        let payload = { time: new Date().toLocaleTimeString([], {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'}), temp: parseFloat(t.toFixed(1)), hum: Math.round(h), shock: parseFloat(s.toFixed(1)), lat, lng };
+
+        if(isOffline) { bufferQueue.push(payload); bufferBytes += 128; els.queueCount.innerText = bufferBytes; } 
+        else { processPayload(payload); }
+    }
+
+    function processPayload(r) {
+        const d = currentTruckData;
+        truckMarker.setLatLng([r.lat, r.lng]); truckMarkerFull.setLatLng([r.lat, r.lng]);
+        els.currentLocationName.innerText = `En Route: ${currentRoute.waypoints[routeIndex].name}`;
+
+        let tempColor = r.temp > d.tempCritHigh ? '#ef4444' : '#22c55e';
+        tempChart.data.datasets[0].backgroundColor[0] = tempColor; tempChart.data.datasets[0].data = [Math.max(0, Math.min(r.temp * 2.5, 100)), 100 - Math.max(0, Math.min(r.temp * 2.5, 100))];
+        humChart.data.datasets[0].data = [r.hum, 100 - r.hum];
+        shockChart.data.datasets[0].backgroundColor[0] = r.shock > 3.0 ? '#ef4444' : '#a855f7'; shockChart.data.datasets[0].data = [Math.min(r.shock * 10, 100), 100 - Math.min(r.shock * 10, 100)];
+        tempChart.update(); humChart.update(); shockChart.update();
+
+        els.tempVal.innerText = r.temp; els.humVal.innerText = r.hum; els.shockVal.innerText = r.shock;
+
+        let timeTick = 0.05;
+        slElapsedDays += timeTick;
+        if(!forceBorderDelay) slCurrentETA = Math.max(0.1, slCurrentETA - (timeTick * 0.8));
+        
+        if (r.temp > d.tempCritHigh) {
+            let overage = r.temp - d.tempCritHigh;
+            slThermalPenalty += (overage * 0.015);
+            cumulativeLoss += (cargoValue * 0.001 * overage);
+            esgCarbonWaste += (overage * 1.4); // ESG calculation dummy multiplier
+            els.financialLoss.innerText = cumulativeLoss.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            els.esgCarbon.innerText = esgCarbonWaste.toFixed(2);
+        }
+
+        let remainingSL = Math.max(0, d.baseSL - slElapsedDays - slThermalPenalty);
+
+        els.mathElapsed.innerText = "- " + slElapsedDays.toFixed(2) + " days";
+        els.mathThermal.innerText = "- " + slThermalPenalty.toFixed(2) + " days";
+        els.mathRemaining.innerText = remainingSL.toFixed(2) + " days";
+        els.bigRemainingSL.innerText = remainingSL.toFixed(1);
+        els.histCurrentTemp.innerText = r.temp + "°C";
+        els.histElapsedTime.innerText = (slElapsedDays * 24).toFixed(1) + " hrs";
+
+        els.decETA.innerHTML = slCurrentETA.toFixed(1) + '<span class="text-base text-slate-500 font-bold ml-1">d</span>';
+        els.decRemaining.innerHTML = remainingSL.toFixed(1) + '<span class="text-base text-slate-500 font-bold ml-1">d</span>';
+        
+        let buffer = remainingSL - slCurrentETA;
+        
+        if (buffer > 1.0) { 
+            els.decOperator.innerText = ">"; els.decOperator.className = "px-4 text-3xl font-black font-mono text-green-500 drop-shadow-sm";
+            els.decIconContainer.className = "w-12 h-12 rounded-2xl flex items-center justify-center bg-green-100 text-green-600 border border-green-200 shadow-sm";
+            if(window.lucide) els.decIcon.setAttribute('data-lucide', 'check-circle-2');
+            els.decTitle.innerText = "LOW RISK"; els.decTitle.className = "text-2xl font-black tracking-tight text-green-700 drop-shadow-sm";
+            els.decMessage.innerText = "Shipment is expected to arrive safely within its estimated usable life. Continue standard monitoring.";
+        } else if (buffer > 0) { 
+            els.decOperator.innerText = "≈"; els.decOperator.className = "px-4 text-3xl font-black font-mono text-amber-500 animate-pulse drop-shadow-sm";
+            els.decIconContainer.className = "w-12 h-12 rounded-2xl flex items-center justify-center bg-amber-100 text-amber-600 border border-amber-200 shadow-sm";
+            if(window.lucide) els.decIcon.setAttribute('data-lucide', 'alert-circle');
+            els.decTitle.innerText = "HIGH RISK"; els.decTitle.className = "text-2xl font-black tracking-tight text-amber-700 drop-shadow-sm";
+            els.decMessage.innerText = "Buffer margin is shrinking. Accelerated deterioration detected. Prioritize unloading upon arrival.";
+        } else { 
+            els.decOperator.innerText = "<"; els.decOperator.className = "px-4 text-3xl font-black font-mono text-red-500 animate-pulse drop-shadow-sm";
+            els.decIconContainer.className = "w-12 h-12 rounded-2xl flex items-center justify-center bg-red-100 text-red-600 border border-red-200 shadow-sm animate-pulse";
+            if(window.lucide) els.decIcon.setAttribute('data-lucide', 'alert-triangle');
+            els.decTitle.innerText = "CRITICAL"; els.decTitle.className = "text-2xl font-black tracking-tight text-red-700 drop-shadow-sm";
+            els.decMessage.innerText = "Shelf-life mismatch detected. Remaining life is shorter than ETA. Intervention required (Reroute or notify recipient).";
+        }
+        if(window.lucide) window.lucide.createIcons();
+
+        if (r.temp > d.tempCritHigh) addLog(r.time, "TEMP", `Excursion (${r.temp}°C)`);
+        else if (r.shock > 3.0) addLog(r.time, "SHOCK", `Impact (${r.shock}G)`);
+        else if (forceBorderDelay) addLog(r.time, "DELAY", `Geofence Immobilized`);
+    }
+
+    function addLog(time, type, reading) {
+        const fullRow = els.fullLogBody.insertRow(0);
+        fullRow.innerHTML = `<td class="px-8 py-5 border-b border-slate-100 font-mono text-slate-500 text-xs">${time}</td>
+            <td class="px-8 py-5 border-b border-slate-100"><span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase bg-slate-100 text-slate-700 border border-slate-200">${type}</span></td>
+            <td class="px-8 py-5 border-b border-slate-100 text-slate-700 font-medium text-sm">${reading}</td>`;
+        if (els.fullLogBody.rows.length > 50) els.fullLogBody.deleteRow(-1);
+    }
+    
+    // --- REVIEWS ---
+    window.submitReview = function() {
+        const rating = document.getElementById('reviewRating').value; const comment = document.getElementById('reviewComment').value;
+        if(!comment.trim()) return;
+        const feed = document.getElementById('reviewFeed');
+        const html = `<div class="bg-white border border-primary-300 shadow-md p-4 rounded-2xl animate-fade-in transition-all">
+                 <div class="flex justify-between items-start mb-2">
+                     <div>
+                         <div class="text-sm font-bold text-slate-800">${document.getElementById('headerUserName').innerText} <span class="text-[10px] font-normal text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full ml-1">${document.getElementById('headerRoleText').innerText}</span></div>
+                         <div class="text-[10px] text-slate-400 font-mono">Route: ${document.getElementById('routeSelect').value}</div>
+                     </div><div class="text-amber-400 text-sm">${'⭐'.repeat(rating)}</div>
+                 </div><p class="text-sm text-slate-600 leading-relaxed">${comment}</p></div>`;
+        feed.insertAdjacentHTML('afterbegin', html); document.getElementById('reviewComment').value = '';
+    }
+
+    // --- EPOD & PDF ---
+    window.generateEPOD = function() {
+        document.getElementById('epodReceipt').classList.remove('hidden');
+        document.getElementById('epodTime').innerText = "TIMESTAMP: " + new Date().toLocaleString();
+        document.getElementById('epodTemp').innerText = els.tempVal.innerText + '°C';
+        document.getElementById('epodRem').innerText = els.mathRemaining.innerText;
+        const statusEl = document.getElementById('epodStatus');
+        if (cumulativeLoss > 0) { statusEl.innerText = "REJECTED (CLAIM FILED)"; statusEl.className = "font-bold text-red-500 uppercase tracking-wide"; } 
+        else { statusEl.innerText = "ACCEPTED (CLEAN TRANSFER)"; statusEl.className = "font-bold text-emerald-600 uppercase tracking-wide"; }
+    }
+
+    window.generatePDF = function() {
+        const { jsPDF } = window.jspdf; const doc = new jsPDF({ unit:'pt', format:'a4' });
+        doc.setFillColor(15, 23, 42); doc.rect(0, 0, 595, 100, 'F');
+        doc.setTextColor(74,222,128).setFontSize(24).setFont(undefined, 'bold'); doc.text("TrackIQ", 40, 50);
+        doc.setTextColor(255).setFontSize(14).text("Continuous Intelligence Report", 40, 70);
+        doc.autoTable({ startY: 130, head: [['Metric', 'Value']], body: [
+            ['Cargo Type', currentTruckData.product], ['Estimated Value at Risk', `$${els.financialLoss.innerText}`],
+            ['Cumulative Thermal Penalty', `-${slThermalPenalty.toFixed(2)} Days`], ['Estimated Remaining Shelf Life', els.mathRemaining.innerText]
+        ], theme: 'striped', headStyles: { fillColor: [15, 23, 42] }});
+        doc.save(`TrackIQ_Report_${els.truckSelect.value}.pdf`);
+    }
+
+    window.addEventListener('load', init);
+</script>
+</body>
+</html>
