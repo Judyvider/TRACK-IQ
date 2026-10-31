@@ -104,7 +104,6 @@
     @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     .toast-animate { animation: slideInRight 0.3s ease-out forwards; }
 
-    /* Persistent Simulated Badge Token */
     .badge-simulated {
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
         font-size: 9px;
@@ -207,7 +206,7 @@
 
 <div id="appView" class="flex-1 flex flex-col h-full w-full hidden-view">
     
-    <!-- Glassy Green Global Header -->
+    <!-- Glassy Green Header -->
     <header class="h-16 bg-brand-600/90 backdrop-blur-md border-b border-brand-700 flex-none flex items-center justify-between px-6 z-20 text-white shadow-md relative">
         <div class="flex items-center gap-3">
             <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center shadow-sm backdrop-blur">
@@ -218,7 +217,6 @@
             </div>
         </div>
 
-        <!-- Center Global Telemetry Status -->
         <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2 bg-brand-800/60 border border-brand-500/60 px-4 py-1.5 rounded-full shadow-sm">
             <div id="connDot" class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
             <span id="connText" class="text-[10px] font-bold text-white tracking-wider uppercase font-mono">Live Data Stream: Active</span>
@@ -261,7 +259,6 @@
                 <div class="nav-item" id="nav-reports" onclick="switchView('reports', event)"><span>Quality Reports & Handover</span></div>
             </div>
 
-            <!-- Pitch & Demo Controls -->
             <div class="mt-auto px-4 pt-8 pb-4" id="nav-pitch">
                 <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl p-4 text-xs font-mono">
                     <div class="flex justify-between items-center mb-3">
@@ -278,12 +275,29 @@
         </aside>
 
         <main class="flex-1 relative overflow-y-auto custom-scrollbar bg-slate-50 p-6 scroll-smooth z-0">
+            <!-- DYNAMIC ESCALATION & EXCURSION WARNING BANNER -->
+            <div id="excursion-alert-banner" class="hidden mb-6 max-w-5xl mx-auto rounded-2xl p-4 border transition-all duration-300">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div class="flex items-start gap-3">
+                        <div id="excursion-alert-icon" class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 id="excursion-alert-title" class="font-black text-sm uppercase tracking-wide"></h3>
+                                <span id="excursion-alert-badge" class="badge-simulated">LIVE EXCURSION</span>
+                            </div>
+                            <p id="excursion-alert-desc" class="text-xs mt-1 leading-relaxed"></p>
+                        </div>
+                    </div>
+                    <div id="excursion-alert-actions" class="flex flex-wrap items-center gap-2 self-end md:self-center shrink-0">
+                    </div>
+                </div>
+            </div>
+
             <div id="alert-border" class="hidden text-white p-3 rounded-2xl mb-6 shadow-lg text-center text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 max-w-5xl mx-auto"></div>
 
-            <!-- VIEW: MAIN LIVE DASHBOARD -->
             <div id="view-main" class="space-y-6 animate-fade-in pb-20">
                 
-                <!-- Shipment Configuration Bento -->
                 <div class="max-w-4xl mx-auto space-y-6" id="card-config">
                     <div class="bento-card p-8 flex flex-col gap-6 bg-white shadow-sm border border-slate-200/70">
                         <div class="text-center mb-2">
@@ -320,12 +334,10 @@
                             <div class="space-y-2">
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Route / County</label>
                                 <select id="sel-route" onchange="handleRouteSelection()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs font-bold text-slate-700 outline-none focus:border-brand-500 cursor-pointer">
-                                    <!-- Populated dynamically via JS -->
                                 </select>
                             </div>
                         </div>
 
-                        <!-- Command Center Controls -->
                         <div class="pt-6 border-t border-slate-100 flex flex-wrap items-center justify-center gap-4">
                             <button id="btn-sys-power" onclick="toggleSystemPower()" class="flex items-center gap-2 bg-emerald-100 text-emerald-700 px-5 py-2.5 rounded-xl text-xs font-bold transition hover:bg-emerald-200 border border-emerald-200 cursor-pointer shadow-sm">
                                 <i data-lucide="power" class="w-4 h-4"></i> <span id="lbl-sys-power">System ON</span>
@@ -341,7 +353,6 @@
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mt-6">
                     <div class="lg:col-span-3 space-y-6 relative" id="col-sensors">
                         
-                        <!-- Offline States & Simulated Dead Zones -->
                         <div id="overlay-offline" class="offline-overlay">
                             <div class="bg-white/95 p-6 rounded-3xl shadow-xl text-center border border-slate-200 backdrop-blur-md max-w-xs">
                                 <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3 animate-pulse"><i data-lucide="wifi-off"></i></div>
@@ -362,7 +373,6 @@
                             </div>
                         </div>
 
-                        <!-- 3 Mini Gauges -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div class="bento-card p-5 relative flex flex-col items-center cursor-pointer hover:border-brand-300 transition-colors" onclick="switchView('temp-detail', event)">
                                 <div class="flex justify-between w-full mb-2">
@@ -391,7 +401,6 @@
                             </div>
                         </div>
 
-                        <!-- Mini Map Preview -->
                         <div class="bento-card p-4 flex flex-col h-72 relative cursor-pointer hover:border-brand-300 transition-colors" onclick="switchView('gps', event)">
                             <div class="flex justify-between items-center mb-3 px-1 relative z-20">
                                 <div class="flex items-center gap-2">
@@ -406,7 +415,6 @@
                         </div>
                     </div>
 
-                    <!-- Business & Environmental Impact Panel -->
                     <div class="space-y-6 h-fit" id="col-finance">
                         <div class="bento-card-dark p-6 relative overflow-hidden flex flex-col">
                             <div class="absolute -right-12 -top-12 w-48 h-48 bg-rose-500/15 rounded-full blur-3xl"></div>
@@ -418,7 +426,6 @@
                                 <span class="badge-simulated-dark">SIMULATED</span>
                             </div>
                             
-                            <!-- Total Cargo Value Metric -->
                             <div class="relative z-10 pb-4 mb-4 border-b border-slate-800">
                                 <div class="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-1 flex justify-between">
                                     <span>Total Shipment Value</span>
@@ -429,7 +436,6 @@
                                 </div>
                             </div>
 
-                            <!-- Value at Risk Metric -->
                             <div class="flex-1 flex flex-col justify-center relative z-10 pb-4 mb-4 border-b border-slate-800">
                                 <div class="text-rose-400 text-[10px] uppercase font-bold tracking-wider mb-1.5 flex justify-between items-center">
                                     <span>Est. Value at Risk</span>
@@ -443,7 +449,6 @@
                                 </p>
                             </div>
                             
-                            <!-- Carbon Waste ESG Metric -->
                             <div class="relative z-10">
                                 <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 flex justify-between items-center">
                                     <span>Est. Carbon Waste (ESG)</span>
@@ -640,7 +645,6 @@
                     <p class="text-xs text-slate-500">Formal compliance dossiers and validated delivery transfer tokens.</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- PDF Generation Card -->
                     <div class="bento-card p-8 flex flex-col">
                         <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-4"><i data-lucide="file-text"></i></div>
                         <h3 class="font-bold text-lg text-slate-800 mb-2">Generate Quality Report</h3>
@@ -650,7 +654,6 @@
                         </button>
                     </div>
                     
-                    <!-- Digital Handover Card -->
                     <div class="bento-card-dark p-8 flex flex-col relative overflow-hidden">
                         <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl"></div>
                         <div class="w-10 h-10 bg-indigo-900/50 rounded-xl flex items-center justify-center text-indigo-400 mb-4 relative z-10"><i data-lucide="qr-code"></i></div>
@@ -733,25 +736,25 @@
     <i data-lucide="brain-circuit" class="w-6 h-6"></i>
 </button>
 
-<div id="ai-window" class="hidden fixed bottom-24 right-6 w-[350px] h-[460px] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden z-50 transform transition-all duration-300 translate-y-4 opacity-0">
+<div id="ai-window" class="hidden fixed bottom-24 right-6 w-[360px] h-[480px] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden z-50 transform transition-all duration-300 translate-y-4 opacity-0">
     <div class="bg-obsidian-950 p-4 flex justify-between items-center border-b border-obsidian-800">
         <div class="flex items-center gap-3">
             <div class="w-2.5 h-2.5 bg-indigo-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(129,140,248,0.8)]"></div>
             <div>
-                <span class="font-bold text-xs text-white block leading-tight">TrackIQ AI Copilot</span>
-                <span class="text-[9px] text-indigo-300 font-mono tracking-wider">REASONING LAYER</span>
+                <span class="font-bold text-xs text-white block leading-tight">TrackIQ Copilot</span>
+                <span class="text-[9px] text-indigo-300 font-mono tracking-wider">FULL SYSTEM INTELLIGENCE</span>
             </div>
         </div>
         <button onclick="toggleAI()" class="text-slate-400 hover:text-white cursor-pointer transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
     </div>
     <div id="ai-chat" class="flex-1 p-4 overflow-y-auto custom-scrollbar bg-slate-50 flex flex-col gap-3">
         <div class="inline-block p-3 rounded-2xl rounded-tl-sm text-xs max-w-[90%] bg-white border border-slate-200 text-slate-700 shadow-sm leading-relaxed">
-            Hello. I am the TrackIQ reasoning agent.<br><br>I synthesize cold chain parameters and predictive shelf life in real time. Ask me about cargo quality, ETA margins, or risk mitigation.
+            👋 I am the <b>TrackIQ Copilot</b>. I can answer <b>anything</b> about the current shipment, live sensor metrics, biological decay models, or how any feature in this platform works.
         </div>
     </div>
     <div class="p-3 bg-white border-t border-slate-200">
         <div class="relative flex items-center">
-            <input type="text" id="ai-input" onkeypress="handleAITyping(event)" placeholder="Ask about shipment status..." class="w-full bg-slate-100 text-xs rounded-full py-2.5 pl-4 pr-10 outline-none focus:ring-1 focus:ring-indigo-500 transition-all border border-transparent focus:border-indigo-200">
+            <input type="text" id="ai-input" onkeypress="handleAITyping(event)" placeholder="Ask anything about the system or cargo..." class="w-full bg-slate-100 text-xs rounded-full py-2.5 pl-4 pr-10 outline-none focus:ring-1 focus:ring-indigo-500 transition-all border border-transparent focus:border-indigo-200">
             <button onclick="handleAITyping({key: 'Enter'})" class="absolute right-2 text-indigo-500 p-1.5 hover:bg-indigo-50 rounded-full transition-colors cursor-pointer"><i data-lucide="send" class="w-4 h-4"></i></button>
         </div>
     </div>
@@ -767,15 +770,15 @@
     };
 
     const SPECS = {
-        'AGRI-001': { name: 'Fresh Tomatoes', maxTemp: 10, maxShock: 3.0, baseSL: 7.0, val: 150000 },
-        'AGRI-002': { name: 'Hass Avocados', maxTemp: 15, maxShock: 2.5, baseSL: 14.0, val: 300000 },
-        'AGRI-003': { name: 'Chilled Beef', maxTemp: 4, maxShock: 3.0, baseSL: 10.0, val: 1200000 },
-        'AGRI-004': { name: 'Fresh Cut Flowers / Roses', maxTemp: 6, maxShock: 2.0, baseSL: 5.0, val: 850000 },
-        'AGRI-005': { name: 'Export French Beans', maxTemp: 8, maxShock: 2.5, baseSL: 8.0, val: 320000 },
-        'AGRI-006': { name: 'Ripe Bananas', maxTemp: 14, maxShock: 3.0, baseSL: 6.0, val: 180000 },
-        'AGRI-007': { name: 'Nile Perch', maxTemp: 2, maxShock: 2.5, baseSL: 4.0, val: 550000 },
-        'AGRI-008': { name: 'Dairy Milk', maxTemp: 3, maxShock: 2.0, baseSL: 3.0, val: 210000 },
-        'OTHER': { name: 'Custom Agricultural Cargo', maxTemp: 10, maxShock: 3.0, baseSL: 7.0, val: 100000 }
+        'AGRI-001': { name: 'Fresh Tomatoes', maxTemp: 10, maxShock: 3.0, baseSL: 7.0, val: 150000, ethylene: 'Moderate' },
+        'AGRI-002': { name: 'Hass Avocados', maxTemp: 15, maxShock: 2.5, baseSL: 14.0, val: 300000, ethylene: 'High' },
+        'AGRI-003': { name: 'Chilled Beef', maxTemp: 4, maxShock: 3.0, baseSL: 10.0, val: 1200000, ethylene: 'None' },
+        'AGRI-004': { name: 'Fresh Cut Flowers / Roses', maxTemp: 6, maxShock: 2.0, baseSL: 5.0, val: 850000, ethylene: 'Very High' },
+        'AGRI-005': { name: 'Export French Beans', maxTemp: 8, maxShock: 2.5, baseSL: 8.0, val: 320000, ethylene: 'Low' },
+        'AGRI-006': { name: 'Ripe Bananas', maxTemp: 14, maxShock: 3.0, baseSL: 6.0, val: 180000, ethylene: 'Extreme' },
+        'AGRI-007': { name: 'Nile Perch', maxTemp: 2, maxShock: 2.5, baseSL: 4.0, val: 550000, ethylene: 'None' },
+        'AGRI-008': { name: 'Dairy Milk', maxTemp: 3, maxShock: 2.0, baseSL: 3.0, val: 210000, ethylene: 'None' },
+        'OTHER': { name: 'Custom Agricultural Cargo', maxTemp: 10, maxShock: 3.0, baseSL: 7.0, val: 100000, ethylene: 'Standard' }
     };
     
     const ROUTES_BY_COUNTRY = {
@@ -803,6 +806,7 @@
     
     let sysPower = true;
     let sysAutoCorrect = false;
+    let excursionPersistTicks = 0;
     let archiveData = [];
     let history = { time: [], temp: [], hum: [], shock: [] };
 
@@ -823,7 +827,8 @@
          'sl-name','sl-base','sl-avg-temp','sl-elapsed','math-base','math-elapsed',
          'math-thermal','math-rem','alert-border', 'lmt-temp', 'lmt-shock',
          'weather-loc', 'weather-temp', 'weather-cond', 'weather-icon',
-         'floating-comms'
+         'floating-comms',
+         'excursion-alert-banner', 'excursion-alert-icon', 'excursion-alert-title', 'excursion-alert-desc', 'excursion-alert-actions'
         ].forEach(id => DOM[id] = document.getElementById(id));
         
         typeWriterEffect();
@@ -842,8 +847,8 @@
 
     window.showToast = function(title, message, type = 'error') {
         const container = document.getElementById('toast-container');
-        const icon = type === 'error' ? '<i data-lucide="shield-alert" class="w-5 h-5 text-rose-500"></i>' : '<i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i>';
-        const borderColor = type === 'error' ? 'border-rose-500' : 'border-emerald-500';
+        const icon = type === 'error' ? '<i data-lucide="shield-alert" class="w-5 h-5 text-rose-500"></i>' : (type === 'warning' ? '<i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i>' : '<i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i>');
+        const borderColor = type === 'error' ? 'border-rose-500' : (type === 'warning' ? 'border-amber-500' : 'border-emerald-500');
         
         const toastHtml = `
             <div class="bg-white border-l-4 ${borderColor} p-4 rounded-xl shadow-xl w-80 flex gap-3 items-start toast-animate">
@@ -1004,6 +1009,107 @@
         }, 100);
     }
 
+    // --- ESCALATION & EXCURSION MANAGEMENT ENGINE ---
+    function updateExcursionAlerts(currTemp) {
+        const banner = DOM['excursion-alert-banner'];
+        if (!banner) return;
+
+        if (currTemp <= activeSpec.maxTemp) {
+            excursionPersistTicks = 0;
+            if (!banner.classList.contains('hidden')) {
+                banner.classList.add('hidden');
+            }
+            return;
+        }
+
+        excursionPersistTicks++;
+        banner.classList.remove('hidden');
+
+        const iconEl = DOM['excursion-alert-icon'];
+        const titleEl = DOM['excursion-alert-title'];
+        const descEl = DOM['excursion-alert-desc'];
+        const actionsEl = DOM['excursion-alert-actions'];
+
+        if (!sysAutoCorrect) {
+            // Autocorrect OFF
+            banner.className = "mb-6 max-w-5xl mx-auto rounded-2xl p-4 border border-rose-300 bg-rose-50 text-rose-950 transition-all duration-300 alert-escalation-card";
+            iconEl.className = "w-10 h-10 rounded-xl bg-rose-200 text-rose-700 flex items-center justify-center shrink-0";
+            iconEl.innerHTML = '<i data-lucide="alert-triangle" class="w-6 h-6"></i>';
+            
+            titleEl.className = "font-black text-sm uppercase tracking-wide text-rose-800";
+            titleEl.innerText = `CRITICAL THERMAL SPIKE: ${currTemp}°C (MAX: ${activeSpec.maxTemp}°C)`;
+            
+            descEl.className = "text-xs mt-1 leading-relaxed text-rose-700";
+            descEl.innerHTML = `Chilling unit excursion active for <b>${activeSpec.name}</b>. Biological shelf life is deteriorating rapidly. <br><b>Recommended Action:</b> Please turn ON <b>AI Autocorrect</b> immediately to restore the chilling unit setpoint, or alert the driver.`;
+
+            actionsEl.innerHTML = `
+                <button onclick="quickTurnOnAutocorrect()" class="bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                    <i data-lucide="zap" class="w-3.5 h-3.5"></i> Turn ON Autocorrect Now
+                </button>
+                <button onclick="quickAlertDriverViaWhatsApp('${currTemp}', false)" class="bg-white hover:bg-rose-100 text-rose-700 border border-rose-300 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="message-circle" class="w-3.5 h-3.5 text-green-600"></i> Alert Driver
+                </button>
+            `;
+        } else {
+            // Autocorrect ON but persistent (> 3 ticks)
+            if (excursionPersistTicks >= 3) {
+                banner.className = "mb-6 max-w-5xl mx-auto rounded-2xl p-4 border border-amber-400 bg-amber-50 text-amber-950 transition-all duration-300 alert-escalation-card";
+                iconEl.className = "w-10 h-10 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center shrink-0";
+                iconEl.innerHTML = '<i data-lucide="alert-octagon" class="w-6 h-6"></i>';
+                
+                titleEl.className = "font-black text-sm uppercase tracking-wide text-amber-900";
+                titleEl.innerText = `PERSISTENT SPIKE: AUTOCORRECT ENGAGED WITH NO THERMAL RESPONSE (${currTemp}°C)`;
+                
+                descEl.className = "text-xs mt-1 leading-relaxed text-amber-800";
+                descEl.innerHTML = `AI Autocorrect attempted chilling setpoint override, but temperature remains <b>${currTemp}°C</b>. Suspected physical failure: reefer power loss, compressor fault, or faulty door seal. <br><b>Required Field Action:</b> Driver must pull over safely, verify reefer circuit breaker and door seals. If unresolved within 30 min, divert cargo to nearest cold storage depot.`;
+
+                actionsEl.innerHTML = `
+                    <button onclick="quickAlertDriverViaWhatsApp('${currTemp}', true)" class="bg-amber-600 hover:bg-amber-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                        <i data-lucide="phone-call" class="w-3.5 h-3.5"></i> Escalate to Driver WhatsApp
+                    </button>
+                    <button onclick="openCommsModal('email')" class="bg-white hover:bg-amber-100 text-amber-800 border border-amber-300 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="mail" class="w-3.5 h-3.5 text-blue-600"></i> Email Maintenance Log
+                    </button>
+                `;
+            } else {
+                banner.className = "mb-6 max-w-5xl mx-auto rounded-2xl p-4 border border-blue-200 bg-blue-50 text-blue-950 transition-all duration-300";
+                iconEl.className = "w-10 h-10 rounded-xl bg-blue-200 text-blue-700 flex items-center justify-center shrink-0";
+                iconEl.innerHTML = '<i data-lucide="cpu" class="w-6 h-6"></i>';
+                
+                titleEl.className = "font-black text-sm uppercase tracking-wide text-blue-900";
+                titleEl.innerText = `AI AUTOCORRECT ENGAGED: RECOVERY IN PROGRESS (${currTemp}°C)`;
+                
+                descEl.className = "text-xs mt-1 leading-relaxed text-blue-700";
+                descEl.innerHTML = `Thermal spike detected. AI Autocorrect command sent to chilling unit. Monitoring compressor telemetry response...`;
+
+                actionsEl.innerHTML = `
+                    <span class="text-xs font-mono font-bold text-blue-700 animate-pulse flex items-center gap-1">
+                        <i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Stabilizing Setpoint...
+                    </span>
+                `;
+            }
+        }
+
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    window.quickTurnOnAutocorrect = function() {
+        if (!sysAutoCorrect) toggleAutoCorrect();
+        showToast("AI Autocorrect Engaged", "Autonomous chilling cycle commanded to reefer unit.", "success");
+    }
+
+    window.quickAlertDriverViaWhatsApp = function(temp, isPersistent) {
+        const loc = DOM['lbl-location'].innerText;
+        let msg = "";
+        if (!isPersistent) {
+            msg = `URGENT DRIVER ALERT: TrackIQ has detected a temperature spike to ${temp}°C in your container (${activeSpec.name}). Threshold is ${activeSpec.maxTemp}°C. Current location: ${loc}. Please inspect chilling control setpoint or turn ON AI Autocorrect on your in-cab dashboard immediately.`;
+        } else {
+            msg = `CRITICAL ESCALATION: AI Autocorrect was unable to bring temperature down (Still at ${temp}°C for ${activeSpec.name} near ${loc}). Reefer failure or door breach suspected. Action: Safely pull over, check compressor power switch, verify rear door seals, and confirm generator fuel.`;
+        }
+        window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+        showToast("Guideline Dispatched", "Emergency maintenance instructions sent via WhatsApp.", "warning");
+    }
+
     window.openCommsModal = function(type) {
         commMode = type;
         const modal = document.getElementById('comms-modal');
@@ -1047,7 +1153,11 @@
         } else if (role === 'Buyer') {
             msg = `TrackIQ Notice: Inbound shipment of ${activeSpec.name} is currently near ${loc}. Storage temp: ${temp}°C. Value at risk: ${activeCurrency} ${loss}. ETA: ${eta} hours.`;
         } else if (role === 'Driver') {
-            msg = `Driver Advisory (TRK-001): Cargo temperature is ${temp}°C. Threshold for ${activeSpec.name} is ${activeSpec.maxTemp}°C. Maintain chilling unit. ${eta} hrs remaining to destination.`;
+            if (parseFloat(temp) > activeSpec.maxTemp) {
+                msg = `CRITICAL DRIVER NOTICE (TRK-001): Cargo temp is ${temp}°C (Safe limit: ${activeSpec.maxTemp}°C). ${!sysAutoCorrect ? 'Please turn ON AI Autocorrect in dashboard controls immediately.' : 'AI Autocorrect is active but temp remains high. Please inspect chilling unit compressor and door seal.'}`;
+            } else {
+                msg = `Driver Advisory (TRK-001): Cargo temperature is nominal at ${temp}°C. Safe ceiling for ${activeSpec.name} is ${activeSpec.maxTemp}°C. Maintain chilling unit. ~${eta} hrs to destination.`;
+            }
         } else {
             msg = `Corridor Audit Log: TRK-001 carrying ${activeSpec.name} passing ${loc}. Current telemetry: ${cumLoss > 0 ? 'Temperature excursion recorded' : 'Compliant baseline'}.`;
         }
@@ -1071,7 +1181,7 @@
         if(val === 'OTHER') {
             customInput.classList.remove('hidden');
             customInput.focus();
-            activeSpec = { name: 'Custom Agricultural Cargo', maxTemp: 10, maxShock: 3.0, baseSL: 7.0, val: 100000 };
+            activeSpec = { name: 'Custom Agricultural Cargo', maxTemp: 10, maxShock: 3.0, baseSL: 7.0, val: 100000, ethylene: 'Standard' };
         } else {
             customInput.classList.add('hidden');
             activeSpec = SPECS[val];
@@ -1121,10 +1231,65 @@
         if(sysAutoCorrect) {
             btn.className = "flex items-center gap-2 bg-brand-100 text-brand-700 px-5 py-2.5 rounded-xl text-xs font-bold transition hover:bg-brand-200 border border-brand-200 cursor-pointer shadow-sm";
             lbl.innerText = "AI Autocorrect ON";
+            // Immediately dismiss the alert banner when autocorrect is engaged
+            const banner = DOM['excursion-alert-banner'];
+            if (banner && !banner.classList.contains('hidden')) {
+                banner.classList.add('hidden');
+            }
         } else {
             btn.className = "flex items-center gap-2 bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl text-xs font-bold transition hover:bg-slate-200 border border-slate-200 cursor-pointer shadow-sm";
             lbl.innerText = "AI Autocorrect OFF";
         }
+    }
+
+    // --- ESCALATION & EXCURSION MANAGEMENT ENGINE ---
+    function updateExcursionAlerts(currTemp) {
+        const banner = DOM['excursion-alert-banner'];
+        if (!banner) return;
+
+        // If temperature is within bounds or Autocorrect is active, keep the banner dismissed
+        if (currTemp <= activeSpec.maxTemp || sysAutoCorrect) {
+            excursionPersistTicks = 0;
+            if (!banner.classList.contains('hidden')) {
+                banner.classList.add('hidden');
+            }
+            return;
+        }
+
+        // Temperature excursion active while Autocorrect is OFF
+        excursionPersistTicks++;
+        banner.classList.remove('hidden');
+
+        const iconEl = DOM['excursion-alert-icon'];
+        const titleEl = DOM['excursion-alert-title'];
+        const descEl = DOM['excursion-alert-desc'];
+        const actionsEl = DOM['excursion-alert-actions'];
+
+        banner.className = "mb-6 max-w-5xl mx-auto rounded-2xl p-4 border border-rose-300 bg-rose-50 text-rose-950 transition-all duration-300";
+        iconEl.className = "w-10 h-10 rounded-xl bg-rose-200 text-rose-700 flex items-center justify-center shrink-0";
+        iconEl.innerHTML = '<i data-lucide="alert-triangle" class="w-6 h-6"></i>';
+        
+        titleEl.className = "font-black text-sm uppercase tracking-wide text-rose-800";
+        titleEl.innerText = `CRITICAL THERMAL SPIKE: ${currTemp}°C (MAX: ${activeSpec.maxTemp}°C)`;
+        
+        descEl.className = "text-xs mt-1 leading-relaxed text-rose-700";
+        descEl.innerHTML = `Chilling unit excursion active for <b>${activeSpec.name}</b>. Monitoring and telemetry continue actively.<br><b>Action:</b> Engage <b>AI Autocorrect</b> to restore reefer setpoint autonomously, or alert the driver to inspect equipment.`;
+
+        actionsEl.innerHTML = `
+            <button onclick="quickTurnOnAutocorrect()" class="bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                <i data-lucide="zap" class="w-3.5 h-3.5"></i> Turn ON Autocorrect Now
+            </button>
+            <button onclick="quickAlertDriverViaWhatsApp('${currTemp}', false)" class="bg-white hover:bg-rose-100 text-rose-700 border border-rose-300 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="message-circle" class="w-3.5 h-3.5 text-green-600"></i> Alert Driver
+            </button>
+        `;
+
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    window.quickTurnOnAutocorrect = function() {
+        if (!sysAutoCorrect) toggleAutoCorrect();
+        showToast("AI Autocorrect Engaged", "Autonomous chilling cycle commanded to reefer unit.", "success");
     }
 
     window.autoArchiveShipment = function() {
@@ -1137,15 +1302,19 @@
             id: "TRK-" + Math.floor(Math.random()*9000 + 1000),
             product: activeSpec.name,
             route: activeRoute.name,
-            status: (cumLoss > 0) ? 'Degradation Flagged' : 'Compliant Delivery',
+            status: (cumLoss > 0) ? 'Thermal Deviation' : 'Compliant Delivery',
             risk: formatCur(cumLoss)
         };
         archiveData.unshift(record);
-        renderArchives();
 
         const modal = document.getElementById('post-shipment-modal');
+        const card = document.getElementById('post-shipment-card');
         modal.classList.remove('hidden');
-        setTimeout(() => { modal.classList.replace('opacity-0', 'opacity-100'); document.getElementById('post-shipment-card').classList.replace('scale-95', 'scale-100'); }, 10);
+        if (window.lucide) window.lucide.createIcons();
+        setTimeout(() => {
+            modal.classList.replace('opacity-0', 'opacity-100');
+            card.classList.replace('scale-95', 'scale-100');
+        }, 10);
     }
 
     window.startNewShipment = function() {
@@ -1205,9 +1374,11 @@
 
     function resetData() {
         bufQ = []; bufB = 0; rIdx = 0; eTime = 0; tPen = 0; estETA = activeRoute.baseHrs; cumLoss = 0; esgCarbon = 0;
+        excursionPersistTicks = 0;
         history = { time: [], temp: [], hum: [], shock: [] };
         pOffline = false; pSpike = false; pShock = false; pDelay = false;
         DOM['alert-border'].style.display='none';
+        if (DOM['excursion-alert-banner']) DOM['excursion-alert-banner'].classList.add('hidden');
         
         DOM['tbl-logs'].innerHTML = ''; 
         DOM['val-loss'].innerText = "0"; 
@@ -1220,6 +1391,9 @@
         DOM['math-base'].innerText = formatDays(activeSpec.baseSL);
         DOM['lmt-temp'].innerText = `Max: ${activeSpec.maxTemp}°C`; 
         DOM['lmt-shock'].innerText = `Max: ${activeSpec.maxShock}G`;
+
+        const slEthylene = document.getElementById('sl-ethylene');
+        if (slEthylene) slEthylene.innerText = activeSpec.ethylene || 'Moderate';
 
         initCharts(); initMaps();
         if(simTimer) clearInterval(simTimer);
@@ -1288,7 +1462,11 @@
                 } else { alertEl.style.display = 'none'; }
                 if(window.lucide) window.lucide.createIcons();
             }
-            if(k==='n'){ pSpike=false; pShock=false; pDelay=false; DOM['alert-border'].style.display='none'; if(pOffline){pOffline=false; toggleNet();} }
+            if(k==='n'){ 
+                pSpike=false; pShock=false; pDelay=false; 
+                DOM['alert-border'].style.display='none'; 
+                if(pOffline){pOffline=false; toggleNet();} 
+            }
         });
     }
 
@@ -1322,7 +1500,8 @@
         if(pShock) { s = 4.2 + Math.random(); pShock = false; }
 
         if(sysAutoCorrect && t > activeSpec.maxTemp) {
-            pSpike = false; t = activeSpec.maxTemp - 1.5;
+            pSpike = false; 
+            t = activeSpec.maxTemp - 1.5;
             addLog(new Date().toLocaleTimeString([],{hour12:false}), "AI OVERRIDE", `Autocorrected Setpoint to ${t.toFixed(1)}°C`);
         }
 
@@ -1347,6 +1526,8 @@
         mkMain.setLatLng([r.lat,r.lng]); mkFull.setLatLng([r.lat,r.lng]);
         DOM['lbl-location'].innerText = activeRoute.pts[rIdx].n;
         if(DOM['weather-loc'].innerText === "Acquiring...") updateWeather(activeRoute.pts[rIdx].n);
+
+        updateExcursionAlerts(r.temp);
 
         cTemp.data.datasets[0].backgroundColor[0] = r.temp > activeSpec.maxTemp ? '#f43f5e' : '#22c55e';
         cTemp.data.datasets[0].data = [Math.max(0, Math.min(r.temp * 2.5, 100)), 100 - Math.max(0, Math.min(r.temp * 2.5, 100))];
@@ -1506,6 +1687,9 @@
                 view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true); writeString(view, 36, 'data');
                 view.setUint32(40, pcm16.length * 2, true);
                 
+                let offset = 44;
+                for (let i = 0; i < pcm16.length; i++, offset += 2) view.setInt16(offset, pcm16[i], true);
+                
                 const wavBlob = new Blob([view], { type: 'audio/wav' }); const audioUrl = URL.createObjectURL(wavBlob);
                 const audio = new Audio(audioUrl);
                 btn.innerHTML = '<i data-lucide="volume-2" class="w-4 h-4"></i> Playing...'; 
@@ -1526,41 +1710,172 @@
         else { w.classList.replace('opacity-100','opacity-0'); w.classList.replace('translate-y-0','translate-y-4'); setTimeout(()=>w.classList.add('hidden'),300); }
     }
 
-    function generateLocalCopilotResponse(query) {
-        const q = query.toLowerCase();
-        const curTemp = parseFloat(DOM['val-temp'].innerText) || 6.2;
+    // --- TRACKIQ COPILOT FULL-SYSTEM INTELLIGENCE ENGINE ---
+    function answerSystemQuery(rawQuery) {
+        const q = rawQuery.toLowerCase().trim();
+        const curTemp = parseFloat(DOM['val-temp'].innerText) || 5.2;
+        const curHum = DOM['val-hum'].innerText || "85";
         const curShock = parseFloat(DOM['val-shock'].innerText) || 1.1;
-        const remainingSL = DOM['math-rem'].innerText || "6.4d";
+        const remainingSL = DOM['math-rem'].innerText || "7 days";
         const lossVal = DOM['val-loss'].innerText || "0";
         const loc = DOM['lbl-location'].innerText || "Active Transit Corridor";
+        const esgVal = DOM['val-esg'].innerText || "0.0";
+        const etaVal = Math.ceil(estETA);
+        const totalVal = DOM['val-total'].innerText;
+        const baseSL = DOM['sl-base'].innerText;
 
-        if (q.includes("shelf") || q.includes("life") || q.includes("decay") || q.includes("spoil")) {
+        // 1. Current Live Status / Snapshot
+        if (q.includes("status") || q.includes("overview") || q.includes("summary") || q.includes("current state") || q.includes("how is it going") || q.includes("what is happening")) {
+            return `<b>Live Shipment Snapshot (${activeSpec.name}):</b><br>
+            • <b>Location:</b> ${loc} (${activeRoute.name})<br>
+            • <b>Temperature:</b> ${curTemp}°C (Max allowable: ${activeSpec.maxTemp}°C)<br>
+            • <b>Remaining Shelf Life:</b> ${remainingSL} (Initial: ${baseSL})<br>
+            • <b>Value at Risk:</b> ${activeCurrency} ${lossVal} / ${activeCurrency} ${totalVal}<br>
+            • <b>ETA:</b> ~${etaVal} hours remaining<br>
+            • <b>Health:</b> ${cumLoss > 0 ? '<span class="text-rose-600 font-bold">Excursion Flagged</span>' : '<span class="text-emerald-600 font-bold">Compliant & Safe</span>'}`;
+        }
+
+        // 2. Shelf Life & Deterioration Engine
+        if (q.includes("shelf") || q.includes("decay") || q.includes("deterioration") || q.includes("rotting") || q.includes("expire") || q.includes("longevity")) {
+            return `<b>Shelf Life Deterioration Engine:</b><br>
+            The system models usable life using:<br>
+            $$\\text{Remaining Life} = \\text{Baseline} - \\text{Transit Time} - \\text{Thermal Penalty} - \\text{Kinetic Stress}$$<br>
+            • <b>Baseline:</b> ${baseSL}<br>
+            • <b>Respiration factor ($Q_{10}$):</b> 2.2× acceleration per 10°C over ceiling.<br>
+            • <b>Current Usable Life Left:</b> <b>${remainingSL}</b><br>
+            • <b>Ethylene Sensitivity:</b> ${activeSpec.ethylene || 'Moderate'}<br>
+            ${curTemp > activeSpec.maxTemp ? '⚠️ Thermal excursion is actively depleting shelf life right now!' : '✅ Chilling cycle is nominal; deterioration rate is at baseline.'}`;
+        }
+
+        // 3. Temperature & Cold Chain
+        if (q.includes("temp") || q.includes("heat") || q.includes("cold") || q.includes("chill") || q.includes("fridge") || q.includes("celsius")) {
             if (curTemp > activeSpec.maxTemp) {
-                return `Biological Assessment: <b>${activeSpec.name}</b> is undergoing thermal decay at ${curTemp}°C (limit: ${activeSpec.maxTemp}°C). Estimated remaining shelf life is down to <b>${remainingSL}</b> with a cumulative risk penalty of -${formatDays(tPen)}. Advise immediate refrigeration check or early offload at ${loc}.`;
+                if (!sysAutoCorrect) {
+                    return `<b>⚠️ Critical Temperature Excursion:</b><br>
+                    Current reading is <b>${curTemp}°C</b>, exceeding safe ceiling (<b>${activeSpec.maxTemp}°C</b>).<br>
+                    • <b>Action:</b> <i>AI Autocorrect is currently OFF</i>. Turn it ON immediately on the Dashboard controls to command cooling setpoint recovery, or send an urgent alert to the driver.`;
+                } else {
+                    return `<b>⚠️ Persistent Thermal Excursion:</b><br>
+                    Current temperature is <b>${curTemp}°C</b>. AI Autocorrect is already ON, but temperatures remain above threshold.<br>
+                    • <b>Physical Action Required:</b> Driver must inspect reefer generator fuel and circuit breaker, check rear door rubber seals, and prepare emergency cold-depot offloading if uncorrected.`;
+                }
             }
-            return `Biological Assessment: <b>${activeSpec.name}</b> respiration is nominal. Temperature is steady at ${curTemp}°C within the ${activeSpec.maxTemp}°C ceiling. Remaining shelf life is preserved at <b>${remainingSL}</b>. Expected retail viability remains high.`;
+            return `<b>✅ Temperature Compliance:</b><br>
+            Current reading is <b>${curTemp}°C</b> (well below the ${activeSpec.maxTemp}°C threshold for ${activeSpec.name}). Chilling unit is operating stably along the ${activeRoute.name}.`;
         }
 
-        if (q.includes("temp") || q.includes("cold") || q.includes("fridge")) {
-            if (curTemp > activeSpec.maxTemp) {
-                return `Thermal Alert: Current temperature of ${curTemp}°C breaches the ${activeSpec.maxTemp}°C specification. Value at risk stands at ${activeCurrency} ${lossVal}. Autocorrect or driver intervention required.`;
-            }
-            return `Thermal Status: Compliant. Storage unit is holding ${curTemp}°C against a ${activeSpec.maxTemp}°C maximum threshold. Chilling compressor operating within baseline duty cycle.`;
+        // 4. Shock, Vibration, Road Impact
+        if (q.includes("shock") || q.includes("impact") || q.includes("bump") || q.includes("g-force") || q.includes("vibrat") || q.includes("road")) {
+            return `<b>Mechanical Shock & Integrity:</b><br>
+            • <b>Current Reading:</b> ${curShock}G (Safety limit: ${activeSpec.maxShock}G)<br>
+            • <b>Risk Status:</b> ${curShock > activeSpec.maxShock ? '<span class="text-rose-600 font-bold">Elevated: Physical bruising triggers localized ethylene spikes</span>' : '<span class="text-emerald-600 font-bold">Normal road vibration</span>'}.<br>
+            • <i>Demo tip:</i> Press key <kbd class="bg-slate-200 px-1 rounded font-mono">S</kbd> to simulate a pothole or severe drop impact.`;
         }
 
-        if (q.includes("eta") || q.includes("arrival") || q.includes("route") || q.includes("time") || q.includes("where")) {
-            return `Corridor Logistics: Approaching <b>${loc}</b> along ${activeRoute.name}. Estimated transit remaining: <b>${estETA.toFixed(1)} hours</b>. Cargo condition is currently classified as ${cumLoss > 0 ? 'FLAGGED FOR INSPECTION' : 'OPTIMAL'}.`;
+        // 5. Humidity
+        if (q.includes("humid") || q.includes("moisture") || q.includes("rh")) {
+            return `<b>Relative Humidity (RH):</b><br>
+            Current sensor reading is <b>${curHum}%</b>. For ${activeSpec.name}, 85–90% RH prevents cargo desiccation (weight loss) without causing condensed droplet pooling that breeds fungal spores.`;
         }
 
-        if (q.includes("loss") || q.includes("risk") || q.includes("financial") || q.includes("cost") || q.includes("value")) {
-            return `Financial Overview: Total shipment value is ${activeCurrency} ${activeSpec.val.toLocaleString()}. Current assessed value at risk is <b>${activeCurrency} ${lossVal}</b> with ${DOM['val-esg'].innerText} kg CO₂e estimated carbon waste equivalent.`;
+        // 6. Financial Risk, Value at Risk, and Pricing
+        if (q.includes("financial") || q.includes("loss") || q.includes("value at risk") || q.includes("cost") || q.includes("money") || q.includes("kes") || q.includes("ugx") || q.includes("tzs") || q.includes("price")) {
+            return `<b>Business Impact & Valuation:</b><br>
+            • <b>Total Shipment Origin Value:</b> ${activeCurrency} ${totalVal}<br>
+            • <b>Estimated Value at Risk:</b> <b>${activeCurrency} ${lossVal}</b><br>
+            • <b>Loss Calculation:</b> Each hour spent above safe threshold depreciates cargo value based on wholesale downgrading penalties.<br>
+            • <b>Mitigation:</b> If loss exceeds 30%, reroute to the nearest regional market instead of waiting for port arrival.`;
         }
 
-        if (q.includes("shock") || q.includes("impact") || q.includes("road") || q.includes("vibrat")) {
-            return `Mechanical Integrity: Current impact rating is <b>${curShock}G</b> (tolerance limit: ${activeSpec.maxShock}G). Structural cell damage risk is currently ${curShock > activeSpec.maxShock ? 'ELEVATED - tissue bruising anticipated' : 'MINIMAL'}.`;
+        // 7. ESG & Carbon Waste
+        if (q.includes("esg") || q.includes("carbon") || q.includes("co2") || q.includes("greenhouse") || q.includes("emission") || q.includes("environment")) {
+            return `<b>ESG & Scope 3 Carbon Waste:</b><br>
+            • <b>Current Footprint Wasted:</b> <b>${esgVal} kg CO₂e</b><br>
+            • <b>How it's calculated:</b> When agricultural produce rots due to broken cold chains, the embedded fertilizer, irrigation, and transport carbon are wasted, plus methane generation upon disposal. TrackIQ logs this for sustainability reporting.`;
         }
 
-        return `TrackIQ Copilot Analysis for <b>${activeSpec.name}</b>:<br>• Current Location: ${loc}<br>• Storage Temp: ${curTemp}°C (Max ${activeSpec.maxTemp}°C)<br>• Remaining Life: ${remainingSL}<br>• Financial Risk: ${activeCurrency} ${lossVal}<br>• Corridor Status: ${cumLoss > 0 ? 'Excursion Detected' : 'Healthy Transit'}.`;
+        // 8. Electronic Proof of Delivery (e-POD) / Handover
+        if (q.includes("pod") || q.includes("handover") || q.includes("receipt") || q.includes("delivery") || q.includes("proof") || q.includes("custody")) {
+            return `<b>Digital Handover Receipt (e-POD):</b><br>
+            • <b>Purpose:</b> Generates a tamper-evident digital custody receipt upon arrival.<br>
+            • <b>How to test:</b> Go to <i>Quality Reports & Handover</i> in the sidebar and click <b>Generate Handover Receipt</b>.<br>
+            • If thermal violations occurred, it generates a <i>Flagged Rejection Notice</i>; if nominal, it issues a <i>Compliant Transfer Certificate</i> with an immutable Record ID.`;
+        }
+
+        // 9. Inspection PDF Report
+        if (q.includes("pdf") || q.includes("report") || q.includes("dossier") || q.includes("download") || q.includes("document")) {
+            return `<b>Quality Inspection Dossier (PDF):</b><br>
+            • You can download an executive PDF by opening the <b>Quality Reports & Handover</b> section or clicking <i>Dossier</i> in the Shipment Archives.<br>
+            • The report includes an AI executive summary, sensor tolerances, and audited deterioration metrics ready for buyers and insurers.`;
+        }
+
+        // 10. Route, ETA, Location, Navigation
+        if (q.includes("route") || q.includes("where") || q.includes("location") || q.includes("eta") || q.includes("arrival") || q.includes("corridor") || q.includes("map") || q.includes("weather")) {
+            return `<b>Corridor Routing & Weather:</b><br>
+            • <b>Active Corridor:</b> ${activeRoute.name}<br>
+            • <b>Current Checkpoint:</b> ${loc}<br>
+            • <b>Calculated Transit ETA:</b> ~${etaVal} hours remaining.<br>
+            • Open the <b>Route Tracking & Weather</b> view to inspect real-time ambient temperature and corridor rainfall risks along waypoints.`;
+        }
+
+        // 11. WhatsApp / Email Dispatch Center
+        if (q.includes("whatsapp") || q.includes("email") || q.includes("message") || q.includes("notify") || q.includes("alert") || q.includes("comms") || q.includes("dispatch")) {
+            return `<b>Floating Communications Hub:</b><br>
+            • Look at the bottom-right green (WhatsApp) and blue (Email) floating buttons.<br>
+            • Clicking either opens the <b>Dispatch Center</b>, which automatically drafts a role-tailored update for Farmers, Buyers, Drivers, or Inspectors based on live temperature and ETA.`;
+        }
+
+        // 12. Demo Controls / Keybinds
+        if (q.includes("demo") || q.includes("key") || q.includes("shortcut") || q.includes("button") || q.includes("how to demo") || q.includes("simulate")) {
+            return `<b>Demo Simulator Shortcuts:</b><br>
+            • <kbd class="bg-slate-200 px-1 rounded font-mono font-bold">T</kbd> : Spike Temperature (triggers thermal excursion)<br>
+            • <kbd class="bg-slate-200 px-1 rounded font-mono font-bold">O</kbd> : Drop Network (simulates offline cellular dead zone)<br>
+            • <kbd class="bg-slate-200 px-1 rounded font-mono font-bold">S</kbd> : Impact Hit (simulates rough road shock)<br>
+            • <kbd class="bg-slate-200 px-1 rounded font-mono font-bold">B</kbd> : Transit Delay (immobilizes vehicle at checkpoint)<br>
+            • <kbd class="bg-slate-200 px-1 rounded font-mono font-bold">N</kbd> : Normalize (restores nominal conditions)`;
+        }
+
+        // 13. System Power & AI Autocorrect
+        if (q.includes("autocorrect") || q.includes("power") || q.includes("turn off") || q.includes("turn on") || q.includes("reefer") || q.includes("override")) {
+            return `<b>System Controls:</b><br>
+            • <b>System Power:</b> Controls master telemetry streaming.<br>
+            • <b>AI Autocorrect:</b> An optional autonomous reefer setpoint actuator. When ON, it automatically overrides the chilling unit setpoint during thermal excursions and clears alerts. <b>When OFF, all sensors, biological deterioration tracking, and alerts continue functioning at full capacity</b> without interruption.`;
+        }
+
+        // 14. Roles & Permissions (RBAC)
+        if (q.includes("role") || q.includes("persona") || q.includes("farmer") || q.includes("transporter") || q.includes("buyer") || q.includes("exporter") || q.includes("admin") || q.includes("access")) {
+            return `<b>Role-Based Access Control (RBAC):</b><br>
+            • <b>Admin:</b> Complete access to all panels, comms, and controls.<br>
+            • <b>Farmer:</b> Full visibility into live temperature, route tracking, and biological shelf life.<br>
+            • <b>Exporter:</b> Access to financials, quality reports, and deterioration models.<br>
+            • <b>Transporter:</b> Focused on GPS navigation, sensor timelines, and logs.<br>
+            • <b>Buyer:</b> Simplified destination ETA and custody status.`;
+        }
+
+        // 15. Supported produce
+        if (q.includes("produce") || q.includes("crops") || q.includes("cargo") || q.includes("avocado") || q.includes("tomato") || q.includes("beef") || q.includes("fish") || q.includes("flower") || q.includes("milk")) {
+            return `<b>Supported Agricultural Commodities:</b><br>
+            TrackIQ has calibrated biological baselines for:<br>
+            1. Fresh Tomatoes (Max 10°C, 7 days)<br>
+            2. Hass Avocados (Max 15°C, 14 days)<br>
+            3. Chilled Beef (Max 4°C, 10 days)<br>
+            4. Fresh Cut Flowers / Roses (Max 6°C, 5 days)<br>
+            5. Export French Beans (Max 8°C, 8 days)<br>
+            6. Ripe Bananas (Max 14°C, 6 days)<br>
+            7. Nile Perch (Max 2°C, 4 days)<br>
+            8. Dairy Milk (Max 3°C, 3 days)<br>
+            9. Custom cargo option for any unlisted produce.`;
+        }
+
+        // Default Comprehensive Response
+        return `<b>TrackIQ Copilot Intelligence:</b><br>
+        I have analyzed your query: <i>"${rawQuery}"</i>.<br><br>
+        <b>Current Trip Snapshot:</b><br>
+        • Cargo: <b>${activeSpec.name}</b> (${curTemp}°C / Max ${activeSpec.maxTemp}°C)<br>
+        • Usable Life: <b>${remainingSL}</b> remaining<br>
+        • Location: <b>${loc}</b> (~${etaVal}h to destination)<br>
+        • Financial Risk: <b>${activeCurrency} ${lossVal}</b><br>
+        • Autocorrect: <b>${sysAutoCorrect ? 'Active' : 'Offline (Manual)'}</b>`;
     }
 
     window.handleAITyping = async function(e) {
@@ -1572,16 +1887,16 @@
         inp.value = ''; cb.scrollTop = cb.scrollHeight;
         
         const tid = 't-'+Date.now(); 
-        cb.insertAdjacentHTML('beforeend', `<div id="${tid}" class="text-[10px] text-indigo-400 font-mono flex items-center gap-1.5"><i data-lucide="loader" class="w-3 h-3 animate-spin"></i> TrackIQ AI reasoning...</div>`); 
+        cb.insertAdjacentHTML('beforeend', `<div id="${tid}" class="text-[10px] text-indigo-400 font-mono flex items-center gap-1.5"><i data-lucide="loader" class="w-3 h-3 animate-spin"></i> TrackIQ Copilot thinking...</div>`); 
         if(window.lucide) window.lucide.createIcons(); cb.scrollTop = cb.scrollHeight;
         
         setTimeout(() => {
-            const aiText = generateLocalCopilotResponse(txt);
+            const aiText = answerSystemQuery(txt);
             const loadEl = document.getElementById(tid);
             if (loadEl) loadEl.remove();
-            cb.insertAdjacentHTML('beforeend', `<div><div class="inline-block p-3 rounded-2xl rounded-tl-sm text-xs max-w-[90%] bg-white border border-slate-200 text-slate-700 shadow-sm leading-relaxed">${aiText}</div></div>`);
+            cb.insertAdjacentHTML('beforeend', `<div><div class="inline-block p-3.5 rounded-2xl rounded-tl-sm text-xs max-w-[92%] bg-white border border-slate-200 text-slate-700 shadow-sm leading-relaxed">${aiText}</div></div>`);
             cb.scrollTop = cb.scrollHeight;
-        }, 400);
+        }, 300);
     }
 </script>
 </body>
