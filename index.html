@@ -215,7 +215,6 @@
             </div>
             <div>
                 <h1 class="text-sm font-black text-white tracking-tight leading-none">Track<span class="text-brand-200">IQ</span></h1>
-                <span class="text-[9px] uppercase font-mono tracking-widest text-brand-100 opacity-90">Cold Chain Intelligence</span>
             </div>
         </div>
 
@@ -288,16 +287,13 @@
                 <div class="max-w-4xl mx-auto space-y-6" id="card-config">
                     <div class="bento-card p-8 flex flex-col gap-6 bg-white shadow-sm border border-slate-200/70">
                         <div class="text-center mb-2">
-                            <div class="flex justify-center mb-1">
-                                <span class="badge-simulated">SIMULATED SCENARIO</span>
-                            </div>
-                            <h2 class="text-sm font-black text-slate-700 uppercase tracking-widest mb-1 mt-1">Shipment Corridor Configuration</h2>
-                            <p class="text-xs text-slate-500">Configure biological baseline tolerances and regional destination pathways.</p>
+                            <h2 class="text-sm font-black text-slate-700 uppercase tracking-widest mb-1">Shipment Configuration</h2>
+                            <p class="text-xs text-slate-500">Select product specifications and hierarchical destination corridors.</p>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div class="space-y-2">
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Produce Category</label>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Produce</label>
                                 <select id="sel-truck" onchange="handleProduceChange()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs font-bold text-slate-700 outline-none focus:border-brand-500 cursor-pointer">
                                     <option value="AGRI-001">Fresh Tomatoes (Max 10°C)</option>
                                     <option value="AGRI-002">Hass Avocados (Max 15°C)</option>
@@ -315,14 +311,14 @@
                             <div class="space-y-2">
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Region / Country</label>
                                 <select id="sel-country" onchange="handleCountryChange()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs font-bold text-slate-700 outline-none focus:border-brand-500 cursor-pointer">
-                                    <option value="KE">Kenya (Domestic Corridor)</option>
+                                    <option value="KE">Kenya (Domestic/Regional)</option>
                                     <option value="UG">Uganda (Cross-Border)</option>
                                     <option value="TZ">Tanzania (Cross-Border)</option>
                                 </select>
                             </div>
 
                             <div class="space-y-2">
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Transit Corridor</label>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Route / County</label>
                                 <select id="sel-route" onchange="handleRouteSelection()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs font-bold text-slate-700 outline-none focus:border-brand-500 cursor-pointer">
                                     <!-- Populated dynamically via JS -->
                                 </select>
