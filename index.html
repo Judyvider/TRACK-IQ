@@ -575,7 +575,7 @@
                         <div class="text-xl font-black text-slate-800 mb-6" id="sl-name">Fresh Tomatoes</div>
                         <div class="space-y-3 text-xs bg-slate-50 p-4 rounded-xl border border-slate-100 flex-1">
                             <div class="flex justify-between text-slate-600"><span>Harvest Origin</span> <span class="font-bold text-slate-800">Day 0</span></div>
-                            <div class="flex justify-between text-slate-600"><span>Expected Baseline</span> <span class="font-bold font-mono text-slate-800" id="sl-base">7.0 d</span></div>
+                            <div class="flex justify-between text-slate-600"><span>Expected Baseline</span> <span class="font-bold font-mono text-slate-800" id="sl-base">7 days</span></div>
                             <div class="flex justify-between text-slate-600 border-t border-slate-200/60 pt-2"><span>Respiration Sensitivity (Q10)</span> <span class="font-bold font-mono text-emerald-700">2.2x / 10°C</span></div>
                             <div class="flex justify-between text-slate-600"><span>Ethylene Vulnerability</span> <span class="font-bold text-amber-600" id="sl-ethylene">Moderate</span></div>
                         </div>
@@ -585,22 +585,22 @@
                         <div class="space-y-4 flex-1 relative z-10">
                             <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-600 uppercase">Avg In-Transit Temp</span><span class="text-lg font-mono font-bold text-slate-800" id="sl-avg-temp">--</span></div>
                             <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-600 uppercase">Corridor Mechanical Stress</span><span class="text-sm font-mono font-bold text-slate-700" id="sl-shock-status">Nominal (&lt; 2.0G)</span></div>
-                            <div class="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center"><span class="text-[10px] font-black text-brand-600 uppercase tracking-widest">Time in Transit</span><span class="font-mono font-black text-brand-600 text-lg" id="sl-elapsed">0.0h</span></div>
+                            <div class="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center"><span class="text-[10px] font-black text-brand-600 uppercase tracking-widest">Time in Transit</span><span class="font-mono font-black text-brand-600 text-lg" id="sl-elapsed">0h</span></div>
                         </div>
                     </div>
                     <div class="bento-card-dark p-6 flex flex-col relative overflow-hidden">
                         <div class="absolute -right-8 -bottom-8 w-40 h-40 bg-brand-500/10 rounded-full blur-2xl"></div>
                         <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5 border-b border-slate-800 pb-2 relative z-10">03 · Degradation Engine</h3>
                         <div class="font-mono text-xs space-y-4 flex-1 relative z-10">
-                            <div class="flex justify-between text-slate-300"><span>Baseline Usable Life</span><span id="math-base" class="font-bold">7.00d</span></div>
+                            <div class="flex justify-between text-slate-300"><span>Baseline Usable Life</span><span id="math-base" class="font-bold">7 days</span></div>
                             <div class="bg-obsidian-800/50 p-3 rounded-lg border border-slate-700/50 space-y-2">
-                                <div class="flex justify-between text-slate-400"><span>Elapsed Transit Time</span><span id="math-elapsed">- 0.00d</span></div>
-                                <div class="flex justify-between text-amber-400"><span>Cumulative Thermal Penalty</span><span id="math-thermal">- 0.00d</span></div>
-                                <div class="flex justify-between text-purple-400"><span>Kinetic Acceleration</span><span id="math-kinetic">- 0.00d</span></div>
+                                <div class="flex justify-between text-slate-400"><span>Elapsed Transit Time</span><span id="math-elapsed">- 0 days</span></div>
+                                <div class="flex justify-between text-amber-400"><span>Cumulative Thermal Penalty</span><span id="math-thermal">- 0 days</span></div>
+                                <div class="flex justify-between text-purple-400"><span>Kinetic Acceleration</span><span id="math-kinetic">- 0 days</span></div>
                             </div>
                             <div class="pt-4 mt-auto border-t border-slate-800 flex justify-between items-center">
                                 <span class="text-[10px] font-black text-white uppercase tracking-widest">Est. Remaining Shelf Life</span>
-                                <span class="font-black text-lg text-brand-400" id="math-rem">7.00d</span>
+                                <span class="font-black text-lg text-brand-400" id="math-rem">7 days</span>
                             </div>
                         </div>
                     </div>
@@ -1198,6 +1198,11 @@
 
     function formatCur(val) { return activeCurrency + " " + val.toLocaleString(undefined,{minimumFractionDigits:0, maximumFractionDigits:0}); }
 
+    function formatDays(val) {
+        const rounded = Math.round(val);
+        return `${rounded} ${rounded === 1 ? 'day' : 'days'}`;
+    }
+
     function resetData() {
         bufQ = []; bufB = 0; rIdx = 0; eTime = 0; tPen = 0; estETA = activeRoute.baseHrs; cumLoss = 0; esgCarbon = 0;
         history = { time: [], temp: [], hum: [], shock: [] };
@@ -1211,8 +1216,8 @@
         DOM['val-currency-tot'].innerText = activeCurrency;
         DOM['val-esg'].innerText = "0.0";
         DOM['sl-name'].innerText = activeSpec.name; 
-        DOM['sl-base'].innerText = activeSpec.baseSL.toFixed(1)+" d";
-        DOM['math-base'].innerText = activeSpec.baseSL.toFixed(2)+"d";
+        DOM['sl-base'].innerText = formatDays(activeSpec.baseSL);
+        DOM['math-base'].innerText = formatDays(activeSpec.baseSL);
         DOM['lmt-temp'].innerText = `Max: ${activeSpec.maxTemp}°C`; 
         DOM['lmt-shock'].innerText = `Max: ${activeSpec.maxShock}G`;
 
@@ -1383,11 +1388,13 @@
         }
 
         let rem = Math.max(0, activeSpec.baseSL - eTime - tPen - kineticPen);
-        DOM['math-elapsed'].innerText = "- "+eTime.toFixed(2)+"d"; DOM['math-thermal'].innerText = "- "+tPen.toFixed(2)+"d";
+        DOM['math-elapsed'].innerText = "- " + formatDays(eTime);
+        DOM['math-thermal'].innerText = "- " + formatDays(tPen);
         const mathKinetic = document.getElementById('math-kinetic');
-        if (mathKinetic) mathKinetic.innerText = "- " + kineticPen.toFixed(2) + "d";
-        DOM['math-rem'].innerText = rem.toFixed(2)+"d";
-        DOM['sl-avg-temp'].innerText = r.temp+"°C"; DOM['sl-elapsed'].innerText = (eTime*24).toFixed(1)+"h";
+        if (mathKinetic) mathKinetic.innerText = "- " + formatDays(kineticPen);
+        DOM['math-rem'].innerText = formatDays(rem);
+        DOM['sl-avg-temp'].innerText = r.temp+"°C"; 
+        DOM['sl-elapsed'].innerText = Math.round(eTime*24) + "h";
 
         if(r.temp > activeSpec.maxTemp) addLog(r.time, "TEMP EXCURSION", `${r.temp}°C (Above limit of ${activeSpec.maxTemp}°C)`);
         else if(r.shock > activeSpec.maxShock) addLog(r.time, "SHOCK EVENT", `Impact ${r.shock}G (Tolerated: ${activeSpec.maxShock}G)`);
@@ -1462,7 +1469,7 @@
                 ['Cargo Classification', activeSpec.name], ['Transit Corridor', activeRoute.name],
                 ['Total Baseline Value', `${activeCurrency} ${activeSpec.val.toLocaleString()}`],
                 ['Calculated Financial Risk', `${activeCurrency} ${DOM['val-loss'].innerText}`],
-                ['Thermal Exposure Degradation', `-${tPen.toFixed(2)}d`], ['Estimated Usable Life Remaining', DOM['math-rem'].innerText]
+                ['Thermal Exposure Degradation', `-${formatDays(tPen)}`], ['Estimated Usable Life Remaining', DOM['math-rem'].innerText]
             ], theme:'striped', headStyles:{fillColor:[15,23,42]} });
             doc.save(`TrackIQ_Inspection_${activeSpec.name.replace(/\s+/g,'_')}.pdf`);
             showToast("Report Downloaded", "Inspection dossier generated successfully.", "success");
@@ -1529,7 +1536,7 @@
 
         if (q.includes("shelf") || q.includes("life") || q.includes("decay") || q.includes("spoil")) {
             if (curTemp > activeSpec.maxTemp) {
-                return `Biological Assessment: <b>${activeSpec.name}</b> is undergoing thermal decay at ${curTemp}°C (limit: ${activeSpec.maxTemp}°C). Estimated remaining shelf life is down to <b>${remainingSL}</b> with a cumulative risk penalty of -${tPen.toFixed(2)} days. Advise immediate refrigeration check or early offload at ${loc}.`;
+                return `Biological Assessment: <b>${activeSpec.name}</b> is undergoing thermal decay at ${curTemp}°C (limit: ${activeSpec.maxTemp}°C). Estimated remaining shelf life is down to <b>${remainingSL}</b> with a cumulative risk penalty of -${formatDays(tPen)}. Advise immediate refrigeration check or early offload at ${loc}.`;
             }
             return `Biological Assessment: <b>${activeSpec.name}</b> respiration is nominal. Temperature is steady at ${curTemp}°C within the ${activeSpec.maxTemp}°C ceiling. Remaining shelf life is preserved at <b>${remainingSL}</b>. Expected retail viability remains high.`;
         }
